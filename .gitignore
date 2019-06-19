@@ -1,0 +1,15 @@
+external/
+gresslib.dir/
+CMakeFiles/
+Debug/
+Release/
+sandbox/
+.vs/
+
+*.vcxproj
+*.filters
+*.sln
+*.user
+
+CMakeCache.txt
+cmake_install.cmake
