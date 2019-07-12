@@ -9,7 +9,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		src/win32/gresslib.c)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	set(SOURCE_FILES
-		include/gresslib/gresslib.h)
+		include/gresslib/gresslib.h
+		src/x11/gresslib.c)
 endif()
 
 include_directories(.)

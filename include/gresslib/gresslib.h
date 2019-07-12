@@ -1,3 +1,6 @@
+#ifndef GRESSLIB_H
+#define GRESSLIB_H
+
 #include <stdbool.h>
 
 enum window_style
@@ -140,3 +143,5 @@ bool destroy_window(struct window* window);
 bool process_os_events(struct window* const window);
 
 void set_input_event_callback(struct window* const window, const enum input_events event, input_callback callback);
+
+#endif

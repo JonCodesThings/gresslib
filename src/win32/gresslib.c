@@ -35,11 +35,6 @@ struct window* create_window(struct window_descriptor* const window_desc)
 	if (RegisterRawInputDevices(devices, 2, sizeof(RAWINPUTDEVICE)) == FALSE)
 		return NULL;
 
-	void* window_alloc = malloc(sizeof(struct window));
-
-	if (window_alloc == NULL)
-		return NULL;
-
 	LPCSTR window_title = window_desc->title;
 
 	unsigned int style;
@@ -57,7 +52,7 @@ struct window* create_window(struct window_descriptor* const window_desc)
 	if (win32_window == NULL)
 		return NULL;
 
-	struct window* window = (struct window*)window_alloc;
+	struct window* window = allocate_window();
 
 	window->descriptor = *window_desc;
 
