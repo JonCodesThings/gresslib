@@ -1,16 +1,12 @@
-#include <stdlib.h>
+#ifndef GRESSLIB_INTERNAL_H
+#define GRESSLIB_INTERNAL_H
 
 #include <include/gresslib/gresslib.h>
 
-struct window* allocate_window(struct window_descriptor* const window_descriptor)
-{
-    void* window_alloc = malloc(sizeof(struct window));
+struct window* allocate_window(struct window_descriptor* const window_descriptor);
 
-	if (window_alloc == NULL)
-		return NULL;
+void set_input_event_callback(struct window* const window, const enum input_events event, input_callback callback);
 
-    struct window* wnd = (struct window*)window_alloc;
-    wnd->descriptor = *window_descriptor;
+void run_input_event_callback(struct window* const window, struct input_event* const event);
 
-    return wnd;
-}
+#endif

@@ -1,4 +1,5 @@
 #include <include/gresslib/gresslib.h>
+#include <src/internal/gresslib_internal.h>
 
 #include <windows.h>
 
@@ -52,7 +53,7 @@ struct window* create_window(struct window_descriptor* const window_desc)
 	if (win32_window == NULL)
 		return NULL;
 
-	struct window* window = allocate_window();
+	struct window* window = allocate_window(window_desc);
 
 	window->descriptor = *window_desc;
 
@@ -119,31 +120,6 @@ bool process_os_events(struct window* const window)
 			return false;
 	}
 	return true;
-}
-
-void set_input_event_callback(struct window* const window, const enum input_events event, input_callback callback)
-{
-	switch (event)
-	{
-	case KEY_PRESS:
-		window->on_key_press = callback;
-		break;
-	case KEY_RELEASE:
-		window->on_key_release = callback;
-		break;
-	case MOUSE_MOVE:
-		window->on_mouse_move = callback;
-		break;
-	case MOUSEBUTTON_PRESS:
-		window->on_mouse_button_press = callback;
-		break;
-	case MOUSEBUTTON_RELEASE:
-		window->on_mouse_button_release = callback;
-		break;
-	case MOUSEWHEEL_MOVE:
-		window->on_mouse_wheel_move = callback;
-		break;
-	}
 }
 
 LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -318,97 +294,51 @@ enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey)
 {
 	switch (vkey)
 	{
-	default:
-		return UNDEFINED;
-	case VK_BACK:
-		return BACKSPACE;
-	case VK_TAB:
-		return TAB;
-	case VK_RETURN:
-		return ENTER;
-	case VK_SHIFT:
-		return LEFT_SHIFT;
-	case VK_CONTROL:
-		return LEFT_CONTROL;
-	case VK_MENU:
-		return LEFT_ALT;
-	case VK_CAPITAL:
-		return CAPS_LOCK;
-	case VK_ESCAPE:
-		return ESCAPE;
-	case VK_SPACE:
-		return SPACEBAR;
-	case '0':
-		return NUM_ZERO;
-	case '1':
-		return NUM_ONE;
-	case '2':
-		return NUM_TWO;
-	case '3':
-		return NUM_THREE;
-	case '4':
-		return NUM_FOUR;
-	case '5':
-		return NUM_FIVE;
-	case '6':
-		return NUM_SIX;
-	case '7':
-		return NUM_SEVEN;
-	case '8':
-		return NUM_EIGHT;
-	case '9':
-		return NUM_NINE;
-	case 'Q':
-		return Q;
-	case 'W':
-		return W;
-	case 'E':
-		return E;
-	case 'R':
-		return R;
-	case 'T':
-		return T;
-	case 'Y':
-		return Y;
-	case 'U':
-		return U;
-	case 'I':
-		return I;
-	case 'O':
-		return O;
-	case 'P':
-		return P;
-	case 'A':
-		return A;
-	case 'S':
-		return S;
-	case 'D':
-		return D;
-	case 'F':
-		return F;
-	case 'G':
-		return G;
-	case 'H':
-		return H;
-	case 'J':
-		return J;
-	case 'K':
-		return K;
-	case 'L':
-		return L;
-	case 'Z':
-		return Z;
-	case 'X':
-		return X;
-	case 'C':
-		return C;
-	case 'V':
-		return V;
-	case 'B':
-		return B;
-	case 'N':
-		return N;
-	case 'M':
-		return M;
+	default:	return UNDEFINED;
+	case VK_BACK:	return BACKSPACE;
+	case VK_TAB:	return TAB;
+	case VK_RETURN:	return ENTER;
+	case VK_SHIFT:	return LEFT_SHIFT;
+	case VK_CONTROL:	return LEFT_CONTROL;
+	case VK_MENU:	return LEFT_ALT;
+	case VK_CAPITAL:	return CAPS_LOCK;
+	case VK_ESCAPE:	return ESCAPE;
+	case VK_SPACE:	return SPACEBAR;
+	case '0':   return NUM_ZERO;
+	case '1':   return NUM_ONE;
+	case '2':   return NUM_TWO;
+	case '3':   return NUM_THREE;
+	case '4':   return NUM_FOUR;
+	case '5':   return NUM_FIVE;
+	case '6':   return NUM_SIX;
+	case '7':   return NUM_SEVEN;
+	case '8':   return NUM_EIGHT;
+	case '9':   return NUM_NINE;
+	case 'Q':   return Q;
+	case 'W':   return W;
+	case 'E':   return E;
+	case 'R':   return R;
+	case 'T':   return T;
+	case 'Y':   return Y;
+	case 'U':   return U;
+	case 'I':   return I;
+	case 'O':   return O;
+	case 'P':   return P;
+	case 'A':   return A;
+	case 'S':   return S;
+	case 'D':   return D;
+	case 'F':   return F;
+	case 'G':   return G;
+	case 'H':   return H;
+	case 'J':   return J;
+	case 'K':   return K;
+	case 'L':   return L;
+	case 'Z':   return Z;
+	case 'X':   return X;
+	case 'C':   return C;
+	case 'V':   return V;
+	case 'B':   return B;
+	case 'N':   return N;
+	case 'M':   return M;
 	}
 }

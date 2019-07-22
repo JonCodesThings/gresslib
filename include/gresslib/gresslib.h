@@ -14,6 +14,7 @@ enum window_style
 
 enum input_events
 {
+	NONE = 0,
 	KEY_PRESS = 1,
 	KEY_RELEASE = 2,
 	MOUSE_MOVE = 3,

@@ -6,10 +6,12 @@ set(CMAKE_C_STANDARD 11)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set(SOURCE_FILES
 		include/gresslib/gresslib.h
+		src/internal/gresslib_internal.c
 		src/win32/gresslib.c)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	set(SOURCE_FILES
 		include/gresslib/gresslib.h
+		src/internal/gresslib_internal.c
 		src/x11/gresslib.c)
 endif()
 
