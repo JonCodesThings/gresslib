@@ -8,18 +8,15 @@
 
 #include <stdlib.h>
 
+/*!
+Function to convert X11 keysyms to gresslib keycodes
+author: Jonathan Duncanson
+*/
 enum keyboard_keycodes x_key_to_gresslib_key(KeySym keysym);
-
-struct x11_native_handle
-{
-    Display* display;
-    Window window;
-    Atom delete_window;
-    Atom window_hints;
-};
 
 //created using information from
 //https://www.tonyobryan.com//index.php?article=9
+//author: Tony O'Bryan
 struct _motif_wm_hints
 {
     unsigned long flags;
@@ -32,6 +29,7 @@ struct _motif_wm_hints
 
 //constants lovingly ripped from SFML's Window implementation for X11
 //https://github.com/SFML/SFML/blob/master/src/SFML/Window/Unix/WindowImplX11.cpp
+//author: SFML team
 const unsigned long _motif_wm_hints_functions = 1 << 0;
 const unsigned long _motif_wm_hints_decorations = 1 << 1;
 
@@ -53,44 +51,58 @@ const unsigned long _motif_wm_hints_function_close = 1 << 5;
 
 struct window* create_window(struct window_descriptor* const window_desc)
 {
+    //open a connection to the display
     Display* display = XOpenDisplay(0);
 
     if (!display)
         return NULL;
 
+    //get colour values
     int black_colour = BlackPixel(display, DefaultScreen(display));
     int white_colour = WhitePixel(display, DefaultScreen(display));
 
+    //window attributes structure
     XSetWindowAttributes attribs;
     attribs.background_pixel = white_colour;
     attribs.border_pixel = black_colour;
     //attribs.override_redirect = true;
 
+    //allocate size hints (prevents resizing)
     XSizeHints* size = XAllocSizeHints();
     size->flags = PMinSize | PMaxSize;
     size->min_width = size->max_width = window_desc->width;
     size->min_height = size->max_height = window_desc->height;
 
-
+    //create the actual window
     Window window = XCreateWindow(display, XRootWindow(display, DefaultScreen(display)),
                             200, 200, 350, 200, 5, DefaultDepth(display, DefaultScreen(display)), InputOutput,
                             DefaultVisual(display, DefaultScreen(display)) ,CWBackPixel, &attribs);
 
+    //enforce the size hints
     XSetWMNormalHints(display, window, size);
 
+    //free the size hints from memory
+    XFree(size);
+
+    //allocate a new window struct
     struct window* wnd = allocate_window(window_desc);
 
     wnd->native_handle = NULL;
 
+    //manually allocate a native handle struct and set the members
     struct x11_native_handle* native_handle = malloc(sizeof(struct x11_native_handle));
     native_handle->display = display;
     native_handle->window = window;
 
+    //set up closing the window using the (x) button
     native_handle->delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(display, window, &native_handle->delete_window, 1);
 
+    //get the motif window hints
+    //this is basically legacy related code
     native_handle->window_hints = XInternAtom(display, "_MOTIF_WM_HINTS", True);
 
+    //specify the hits we're changing
     struct _motif_wm_hints window_hints;
     window_hints.flags = _motif_wm_hints_functions | _motif_wm_hints_decorations;
     window_hints.decorations = 0;
@@ -103,27 +115,31 @@ struct window* create_window(struct window_descriptor* const window_desc)
         window_hints.functions |=  _motif_wm_hints_function_close | _motif_wm_hints_decoration_resize;
     }
 
+    //change the property based on the hints
+    int l =  XChangeProperty(display, window, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);
 
-   int l =  XChangeProperty(display, window, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);
-
+    //assing the native handle pointer
     wnd->native_handle = (void*)native_handle;
 
+    //set which os events we want to receive
     XSelectInput(display, window, ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask);
 
+    //actually show the window
     XMapWindow(display, window);
 
-    XSetTransientForHint(display, window, RootWindow(display, DefaultScreen(display)));
+    //XSetTransientForHint(display, window, RootWindow(display, DefaultScreen(display)));
 
-
+    //create a GC
     GC gc = XCreateGC(display, window, 0, 0);
 
+    //set the default colour of the window to white
     XSetForeground(display, gc, white_colour);
 
+    //set the window title
     XStoreName(display, window, window_desc->title);
 
+    //send all those commands to the display server
     XFlush(display);
-
-    XFree(size);
 
     return wnd;
 }
@@ -131,19 +147,25 @@ struct window* create_window(struct window_descriptor* const window_desc)
 bool destroy_window(struct window* window)
 {
     struct x11_native_handle* native_handle = (struct x11_native_handle*)window->native_handle;
+    
     XCloseDisplay(native_handle->display);
     window->native_handle = NULL;
+
     return true;
 }
 
 bool process_os_events(struct window* const window)
 {
     struct x11_native_handle* native_handle = (struct x11_native_handle*)window->native_handle;
+
+    //define events
     XEvent e;
     struct input_event ev;
+
+    //while there are events pending
     while (XPending(native_handle->display))
     {
-        ev.event_type = NONE;
+        ev.event_type = EVENT_NONE;
         XNextEvent(native_handle->display, &e);
         switch (e.type)
         {
@@ -151,6 +173,7 @@ bool process_os_events(struct window* const window)
                 return true;
             case ClientMessage:
             {
+            //if the (x) button is clicked
             if (e.xclient.data.l[0] == native_handle->delete_window)
                 return false;
             }
@@ -235,9 +258,10 @@ bool process_os_events(struct window* const window)
 
 enum keyboard_keycodes x_key_to_gresslib_key(KeySym keysym)
 {
+    //evil switch-case statement of death
     switch (keysym)
     {
-    default:    return UNDEFINED;
+    default:    return KEYCODE_UNDEFINED;
     case XK_BackSpace:  return BACKSPACE;
 	case XK_Tab:    return TAB;
 	case XK_Return: return ENTER;

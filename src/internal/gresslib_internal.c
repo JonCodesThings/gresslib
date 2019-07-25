@@ -4,6 +4,7 @@
 
 struct window* allocate_window(struct window_descriptor* const window_descriptor)
 {
+	//allocate the window struct
     void* window_alloc = malloc(sizeof(struct window));
 
 	if (window_alloc == NULL)
@@ -17,8 +18,11 @@ struct window* allocate_window(struct window_descriptor* const window_descriptor
 
 void set_input_event_callback(struct window* const window, const enum input_events event, input_callback callback)
 {
+	//set the event callback
 	switch (event)
 	{
+	default:
+		break;
 	case KEY_PRESS:
 		window->on_key_press = callback;
 		break;
@@ -42,6 +46,7 @@ void set_input_event_callback(struct window* const window, const enum input_even
 
 void run_input_event_callback(struct window* const window, struct input_event* const event)
 {
+	//find the correct callback if it exists and call it
 	switch (event->event_type)
 	{
 	default: return;

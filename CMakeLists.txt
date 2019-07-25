@@ -12,6 +12,7 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	set(SOURCE_FILES
 		include/gresslib/gresslib.h
 		src/internal/gresslib_internal.c
+		src/glx/glbootstrap.c
 		src/x11/gresslib.c)
 endif()
 
