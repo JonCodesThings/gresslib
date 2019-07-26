@@ -117,7 +117,7 @@ enum keyboard_keycodes
 Struct to store input event data.
 author: Jonathan Duncanson
 */
-struct input_event
+typedef struct
 {
 	enum input_events event_type;
 	union
@@ -131,30 +131,30 @@ struct input_event
 			int mouse_y;
 		};
 	};
-};
+} input_event;
 
 //typedef for input callbacks
-typedef void (*input_callback)(struct input_event*);
+typedef void (*input_callback)(input_event*);
 
 /*!
 Struct to define window properties.
 author: Jonathan Duncanson
 */
-struct window_descriptor
+typedef struct
 {
 	const char* title;
 	unsigned int width;
 	unsigned int height;
 	unsigned int style;
-};
+} window_descriptor;
 
 /*!
 Enum to define an actual window.
 author: Jonathan Duncanson
 */
-struct window
+typedef struct
 {
-	struct window_descriptor descriptor;
+	window_descriptor descriptor;
 	void* native_handle;
 	input_callback on_key_press;
 	input_callback on_key_release;
@@ -162,13 +162,13 @@ struct window
 	input_callback on_mouse_button_press;
 	input_callback on_mouse_button_release;
 	input_callback on_mouse_wheel_move;
-};
+} window;
 
 /*!
 Struct to define OpenGl context properties.
 author: Jonathan Duncanson
 */
-struct glcontext_descriptor
+typedef struct
 {
 	unsigned int red_size;
 	unsigned int blue_size;
@@ -176,42 +176,42 @@ struct glcontext_descriptor
 	unsigned int alpha_size;
 	unsigned int depth_size;
 	unsigned int stencil_size;
-};
+} glcontext_descriptor;
 
 /*!
 Function that creates a window. Returns NULL on failure.
 author: Jonathan Duncanson
 */
-struct window* create_window(struct window_descriptor* const window_desc);
+window* create_window(window_descriptor* const window_desc);
 
 /*!
 Function that destroys a given window.
 author: Jonathan Duncanson
 */
-bool destroy_window(struct window* window);
+bool destroy_window(window* const window);
 
 /*!
 Function that processes os events for the window.
 author: Jonathan Duncanson
 */
-bool process_os_events(struct window* const window);
+bool process_os_events(window* const window);
 
 /*!
 Function that creates an OpenGL context.
 author: Jonathan Duncanson
 */
-bool bootstrap_gl(struct window* window, struct glcontext_descriptor* const context_desc);
+bool bootstrap_gl(window* const window, glcontext_descriptor* const context_desc);
 
 /*!
 Function that swaps the backbuffer of the current OpenGL context.
 author: Jonathan Duncanson
 */
-void swap_gl_buffers(struct window* window);
+void swap_gl_buffers(window* const window);
 
 /*!
 Function that sets the callback for the relevant input event type.
 author: Jonathan Duncanson
 */
-void set_input_event_callback(struct window* const window, const enum input_events event, input_callback callback);
+void set_input_event_callback(window* const window, const enum input_events event, input_callback callback);
 
 #endif

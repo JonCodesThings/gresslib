@@ -2,21 +2,21 @@
 
 #include <stdlib.h>
 
-struct window* allocate_window(struct window_descriptor* const window_descriptor)
+window* allocate_window(window_descriptor* const window_descriptor)
 {
 	//allocate the window struct
-    void* window_alloc = malloc(sizeof(struct window));
+    void* window_alloc = malloc(sizeof(window));
 
 	if (window_alloc == NULL)
 		return NULL;
 
-    struct window* wnd = (struct window*)window_alloc;
+    window* wnd = (window*)window_alloc;
     wnd->descriptor = *window_descriptor;
 
     return wnd;
 }
 
-void set_input_event_callback(struct window* const window, const enum input_events event, input_callback callback)
+void set_input_event_callback(window* const window, const enum input_events event, input_callback callback)
 {
 	//set the event callback
 	switch (event)
@@ -44,7 +44,7 @@ void set_input_event_callback(struct window* const window, const enum input_even
 	}
 }
 
-void run_input_event_callback(struct window* const window, struct input_event* const event)
+void run_input_event_callback(window* const window, input_event* const event)
 {
 	//find the correct callback if it exists and call it
 	switch (event->event_type)

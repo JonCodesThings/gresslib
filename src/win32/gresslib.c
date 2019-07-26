@@ -7,7 +7,7 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey);
 
-struct window* create_window(struct window_descriptor* const window_desc)
+struct window* create_window(window_descriptor* const window_desc)
 {
 	LPCSTR name = "gresslib_win32_window_class";
 
@@ -53,7 +53,7 @@ struct window* create_window(struct window_descriptor* const window_desc)
 	if (win32_window == NULL)
 		return NULL;
 
-	struct window* window = allocate_window(window_desc);
+	window* window = allocate_window(window_desc);
 
 	window->descriptor = *window_desc;
 
@@ -82,7 +82,7 @@ struct window* create_window(struct window_descriptor* const window_desc)
 	return window;
 }
 
-bool destroy_window(struct window* window)
+bool destroy_window(window* const window)
 {
 	if (!window)
 		return true;
@@ -108,7 +108,7 @@ bool destroy_window(struct window* window)
 	return true;
 }
 
-bool process_os_events(struct window* const window)
+bool process_os_events(window* const window)
 {
 	MSG msg = { 0 };
 	while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))

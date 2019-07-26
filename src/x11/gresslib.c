@@ -17,14 +17,14 @@ enum keyboard_keycodes x_key_to_gresslib_key(KeySym keysym);
 //created using information from
 //https://www.tonyobryan.com//index.php?article=9
 //author: Tony O'Bryan
-struct _motif_wm_hints
+typedef struct
 {
     unsigned long flags;
     unsigned long functions;
     unsigned long decorations;
     long InputMode;
     unsigned long status;
-};
+} _motif_wm_hints;
 
 
 //constants lovingly ripped from SFML's Window implementation for X11
@@ -49,7 +49,7 @@ const unsigned long _motif_wm_hints_function_maximize = 1 << 4;
 const unsigned long _motif_wm_hints_function_close = 1 << 5;
 
 
-struct window* create_window(struct window_descriptor* const window_desc)
+window* create_window(window_descriptor* const window_desc)
 {
     //open a connection to the display
     Display* display = XOpenDisplay(0);
@@ -74,36 +74,36 @@ struct window* create_window(struct window_descriptor* const window_desc)
     size->min_height = size->max_height = window_desc->height;
 
     //create the actual window
-    Window window = XCreateWindow(display, XRootWindow(display, DefaultScreen(display)),
+    Window w = XCreateWindow(display, XRootWindow(display, DefaultScreen(display)),
                             200, 200, 350, 200, 5, DefaultDepth(display, DefaultScreen(display)), InputOutput,
                             DefaultVisual(display, DefaultScreen(display)) ,CWBackPixel, &attribs);
 
     //enforce the size hints
-    XSetWMNormalHints(display, window, size);
+    XSetWMNormalHints(display, w, size);
 
     //free the size hints from memory
     XFree(size);
 
     //allocate a new window struct
-    struct window* wnd = allocate_window(window_desc);
+    window *wnd = allocate_window(window_desc);
 
     wnd->native_handle = NULL;
 
     //manually allocate a native handle struct and set the members
-    struct x11_native_handle* native_handle = malloc(sizeof(struct x11_native_handle));
+    x11_native_handle* native_handle = malloc(sizeof(x11_native_handle));
     native_handle->display = display;
-    native_handle->window = window;
+    native_handle->window = w;
 
     //set up closing the window using the (x) button
     native_handle->delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(display, window, &native_handle->delete_window, 1);
+    XSetWMProtocols(display, w, &native_handle->delete_window, 1);
 
     //get the motif window hints
     //this is basically legacy related code
     native_handle->window_hints = XInternAtom(display, "_MOTIF_WM_HINTS", True);
 
     //specify the hits we're changing
-    struct _motif_wm_hints window_hints;
+    _motif_wm_hints window_hints;
     window_hints.flags = _motif_wm_hints_functions | _motif_wm_hints_decorations;
     window_hints.decorations = 0;
     window_hints.functions = 0;
@@ -116,27 +116,27 @@ struct window* create_window(struct window_descriptor* const window_desc)
     }
 
     //change the property based on the hints
-    int l =  XChangeProperty(display, window, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);
+    int l =  XChangeProperty(display, w, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);
 
     //assing the native handle pointer
     wnd->native_handle = (void*)native_handle;
 
     //set which os events we want to receive
-    XSelectInput(display, window, ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask);
+    XSelectInput(display, w, ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask);
 
     //actually show the window
-    XMapWindow(display, window);
+    XMapWindow(display, w);
 
     //XSetTransientForHint(display, window, RootWindow(display, DefaultScreen(display)));
 
     //create a GC
-    GC gc = XCreateGC(display, window, 0, 0);
+    GC gc = XCreateGC(display, w, 0, 0);
 
     //set the default colour of the window to white
     XSetForeground(display, gc, white_colour);
 
     //set the window title
-    XStoreName(display, window, window_desc->title);
+    XStoreName(display, w, window_desc->title);
 
     //send all those commands to the display server
     XFlush(display);
@@ -144,9 +144,9 @@ struct window* create_window(struct window_descriptor* const window_desc)
     return wnd;
 }
 
-bool destroy_window(struct window* window)
+bool destroy_window(window* window)
 {
-    struct x11_native_handle* native_handle = (struct x11_native_handle*)window->native_handle;
+    x11_native_handle* native_handle = (x11_native_handle*)window->native_handle;
     
     XCloseDisplay(native_handle->display);
     window->native_handle = NULL;
@@ -154,13 +154,13 @@ bool destroy_window(struct window* window)
     return true;
 }
 
-bool process_os_events(struct window* const window)
+bool process_os_events(window* const window)
 {
-    struct x11_native_handle* native_handle = (struct x11_native_handle*)window->native_handle;
+    x11_native_handle* native_handle = (x11_native_handle*)window->native_handle;
 
     //define events
     XEvent e;
-    struct input_event ev;
+    input_event ev;
 
     //while there are events pending
     while (XPending(native_handle->display))

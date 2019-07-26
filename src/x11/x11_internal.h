@@ -1,20 +1,23 @@
 #ifndef GRESSLIB_X11_INTERNAL_H
 #define GRESSLIB_X11_INTERNAL_H
 
-//lovingly ripped from  
-// https://www.cl.cam.ac.uk/~mgk25/ucs/keysym2ucs.c
-//author: Markus G. Kuhn <http://www.cl.cam.ac.uk/~mgk25/> University of Cambridge, April 2001
-
 #include <X11/XKBlib.h>
 
-struct x11_native_handle
+/*!
+Struct for X11 native handles.
+author: Jonathan Duncanson
+*/
+typedef struct
 {
     Display* display;
     Window window;
     Atom delete_window;
     Atom window_hints;
-};
+} x11_native_handle;
 
+//lovingly ripped from  
+// https://www.cl.cam.ac.uk/~mgk25/ucs/keysym2ucs.c
+//author: Markus G. Kuhn <http://www.cl.cam.ac.uk/~mgk25/> University of Cambridge, April 2001
 long keysym2ucs(KeySym keysym);
 
 #endif

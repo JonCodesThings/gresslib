@@ -6,7 +6,7 @@
 
 //TODO add proper context handling using structs(?) - Jon
 
-bool bootstrap_gl(struct window* window, struct glcontext_descriptor* const context_desc)
+bool bootstrap_gl(window* window, glcontext_descriptor* const context_desc)
 {
     //context attribute array
     //TODO support more context details
@@ -25,7 +25,7 @@ bool bootstrap_gl(struct window* window, struct glcontext_descriptor* const cont
     };
 
     //get the native handle
-    struct x11_native_handle* native = (struct x11_native_handle*)window->native_handle;
+    x11_native_handle* native = (x11_native_handle*)window->native_handle;
 
     //choose visual info based on the context attribute array
     XVisualInfo* vis = glXChooseVisual(native->display, DefaultScreen(native->display), context_attribs);
@@ -51,9 +51,9 @@ bool bootstrap_gl(struct window* window, struct glcontext_descriptor* const cont
     return true;
 }
 
-void swap_gl_buffers(struct window* window)
+void swap_gl_buffers(window* const window)
 {
-    struct x11_native_handle* native = (struct x11_native_handle*)window->native_handle;
+    x11_native_handle* native = (x11_native_handle*)window->native_handle;
     
     glXSwapBuffers(native->display, native->window);
 }
