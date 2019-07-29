@@ -13,6 +13,9 @@ window* allocate_window(window_descriptor* const window_descriptor)
     window* wnd = (window*)window_alloc;
     wnd->descriptor = *window_descriptor;
 
+	wnd->on_key_press = wnd->on_key_release = wnd->on_mouse_button_press =
+	wnd->on_mouse_button_release = wnd->on_mouse_move = wnd->on_mouse_wheel_move = NULL;
+
     return wnd;
 }
 
