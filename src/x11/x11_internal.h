@@ -3,6 +3,8 @@
 
 #include <X11/XKBlib.h>
 
+#include <GL/glx.h>
+
 /*!
 Struct for X11 native handles.
 author: Jonathan Duncanson
@@ -11,8 +13,11 @@ typedef struct
 {
     Display* display;
     Window window;
+    Cursor normal;
+    Cursor hidden;
     Atom delete_window;
     Atom window_hints;
+    GLXContext gl_context;
 } x11_native_handle;
 
 //lovingly ripped from  

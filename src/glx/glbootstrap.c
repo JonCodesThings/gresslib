@@ -48,6 +48,8 @@ bool bootstrap_gl(window* window, glcontext_descriptor* const context_desc)
     //make the context current
     glXMakeCurrent(native->display, native->window, context);
 
+    native->gl_context = context;
+
     return true;
 }
 
@@ -56,4 +58,11 @@ void swap_gl_buffers(window* const window)
     x11_native_handle* native = (x11_native_handle*)window->native_handle;
     
     glXSwapBuffers(native->display, native->window);
+}
+
+void shutdown_gl(window* window)
+{
+    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+
+    glXDestroyContext(native->display, native->gl_context);
 }

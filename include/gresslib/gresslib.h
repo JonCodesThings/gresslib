@@ -214,4 +214,10 @@ author: Jonathan Duncanson
 */
 void set_input_event_callback(window* const window, const enum input_events event, input_callback callback);
 
+void show_cursor(window* const window);
+
+void hide_cursor(window* const window);
+
+void warp_cursor(window* const window, const int x, const int y);
+
 #endif

@@ -1,12 +1,16 @@
 #include <include/gresslib/gresslib.h>
 #include <src/internal/gresslib_internal.h>
 #include <src/x11/x11_internal.h>
+#include <src/glx/glbootstrap.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
+#include <X11/cursorfont.h>
 
 #include <stdlib.h>
+
+#include <stdio.h>
 
 /*!
 Function to convert X11 keysyms to gresslib keycodes
@@ -89,10 +93,11 @@ window* create_window(window_descriptor* const window_desc)
 
     wnd->native_handle = NULL;
 
-    //manually allocate a native handle struct and set the members
+    //manually allocate a native handle struct and set some members
     x11_native_handle* native_handle = malloc(sizeof(x11_native_handle));
     native_handle->display = display;
     native_handle->window = w;
+    native_handle->gl_context = NULL;
 
     //set up closing the window using the (x) button
     native_handle->delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
@@ -116,9 +121,27 @@ window* create_window(window_descriptor* const window_desc)
     }
 
     //change the property based on the hints
-    int l =  XChangeProperty(display, w, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);
+    XChangeProperty(display, w, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);
 
-    //assing the native handle pointer
+    //set the default cursor
+    native_handle->normal = XCreateFontCursor(display, XC_left_ptr);
+
+    //defines the cursor as the default
+    XDefineCursor(native_handle->display, native_handle->window, native_handle->normal);
+
+    //create a blank bitmap to use for the transparent cursor
+    char raw_cursor_data;
+    XColor colour;
+    colour.red = colour.green = colour.blue = 0;
+    Pixmap hidden_cursor_pixmap = XCreateBitmapFromData(native_handle->display, DefaultRootWindow(display), &raw_cursor_data, 1, 1);
+
+    //create a transparent cursor
+    native_handle->hidden = XCreatePixmapCursor(native_handle->display, hidden_cursor_pixmap, hidden_cursor_pixmap, &colour, &colour, 0, 0);
+
+    //free the bitmap from memory after use
+    XFreePixmap(native_handle->display, hidden_cursor_pixmap);
+
+    //adding the native handle pointer
     wnd->native_handle = (void*)native_handle;
 
     //set which os events we want to receive
@@ -146,9 +169,20 @@ window* create_window(window_descriptor* const window_desc)
 
 bool destroy_window(window* window)
 {
-    x11_native_handle* native_handle = (x11_native_handle*)window->native_handle;
+    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+
+    //destroy the gl context as required
+    if (native->gl_context)
+        shutdown_gl(window);
     
-    XCloseDisplay(native_handle->display);
+    //free both cursor resources
+    XFreeCursor(native->display, native->normal);
+    XFreeCursor(native->display, native->hidden);
+
+    //close the display and free the native handle
+    XCloseDisplay(native->display);
+    free(native);
+
     window->native_handle = NULL;
 
     return true;
@@ -254,6 +288,35 @@ bool process_os_events(window* const window)
         run_input_event_callback(window, &ev);
     }
 	return true;
+}
+
+void show_cursor(window* const window)
+{
+    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+
+    //define the default cursor as the current one
+    XDefineCursor(native->display, native->window, native->normal);
+
+    XFlush(native->display); 
+}
+
+void hide_cursor(window* const window)
+{
+    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+
+    //define the transparent cursor as the current one
+    XDefineCursor(native->display, native->window, native->hidden);
+
+    XFlush(native->display);
+}
+
+void warp_cursor(window* const window, const int x, const int y)
+{
+    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+
+    XWarpPointer(native->display, None, native->window, 0, 0, 0, 0, x, y);
+
+    XFlush(native->display);
 }
 
 enum keyboard_keycodes x_key_to_gresslib_key(KeySym keysym)
