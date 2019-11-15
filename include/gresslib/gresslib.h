@@ -165,7 +165,7 @@ typedef struct
 } window;
 
 /*!
-Struct to define OpenGl context properties.
+Struct to define OpenGL context properties.
 author: Jonathan Duncanson
 */
 typedef struct

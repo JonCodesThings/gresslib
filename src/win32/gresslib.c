@@ -7,7 +7,7 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey);
 
-struct window* create_window(window_descriptor* const window_desc)
+window* create_window(window_descriptor* const window_desc)
 {
 	LPCSTR name = "gresslib_win32_window_class";
 
@@ -103,7 +103,6 @@ bool destroy_window(window* const window)
 	DestroyWindow(window->native_handle);
 
 	free(window);
-	window = NULL;
 
 	return true;
 }
@@ -179,9 +178,9 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		if (!input)
 			break;
 
-		struct window* window = GetProp(hwnd, "gresslib_handle");
+		window* window = GetProp(hwnd, "gresslib_handle");
 
-		struct input_event ev;
+		input_event ev;
 
 		switch (input->header.dwType)
 		{
@@ -290,11 +289,30 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+
+void show_cursor(window * const window)
+{
+	while (ShowCursor(true) <= 0)
+		ShowCursor(true);
+}
+
+void hide_cursor(window * const window)
+{
+	while (ShowCursor(false) >= 0)
+		ShowCursor(false);
+}
+
+void warp_cursor(window * const window, const int x, const int y)
+{
+	SetCursorPos(x, y);
+}
+
+
 enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey)
 {
 	switch (vkey)
 	{
-	default:	return UNDEFINED;
+	default:	return KEYCODE_UNDEFINED;
 	case VK_BACK:	return BACKSPACE;
 	case VK_TAB:	return TAB;
 	case VK_RETURN:	return ENTER;
