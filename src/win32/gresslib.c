@@ -1,5 +1,7 @@
 #include <include/gresslib/gresslib.h>
 #include <src/internal/gresslib_internal.h>
+#include <src/win32/win32_internal.h>
+#include <src/WGL/glbootstrap.h>
 
 #include <windows.h>
 
@@ -57,7 +59,10 @@ window* create_window(window_descriptor* const window_desc)
 
 	window->descriptor = *window_desc;
 
-	window->native_handle = win32_window;
+	win32_native_handle *native_handle = malloc(sizeof(win32_native_handle));
+	native_handle->wnd = win32_window;
+
+	window->native_handle = native_handle;
 
 	window->on_key_press = NULL;
 	window->on_key_release = NULL;
@@ -87,20 +92,23 @@ bool destroy_window(window* const window)
 	if (!window)
 		return true;
 
+	win32_native_handle *native_handle = window->native_handle;
+
+
 	LPCSTR property_name = "gresslib_handle";
-	RemoveProp(window->native_handle, property_name);
+	RemoveProp(native_handle->wnd, property_name);
 
 	property_name = "gresslib_rawinput_buffer";
-	if ((LPBYTE*)GetProp(window->native_handle, property_name) != NULL)
-		free((LPBYTE*)GetProp(window->native_handle, property_name));
+	if ((LPBYTE*)GetProp(native_handle->wnd, property_name) != NULL)
+		free((LPBYTE*)GetProp(native_handle->wnd, property_name));
 
-	RemoveProp(window->native_handle, property_name);
+	RemoveProp(native_handle->wnd, property_name);
 
 	property_name = "gresslib_rawinput_buffer_size";
-	RemoveProp(window->native_handle, property_name);
-	SendMessage(window->native_handle, WM_QUIT, 0, 0);
+	RemoveProp(native_handle->wnd, property_name);
+	SendMessage(native_handle->wnd, WM_QUIT, 0, 0);
 
-	DestroyWindow(window->native_handle);
+	DestroyWindow(native_handle->wnd);
 
 	free(window);
 
