@@ -3,7 +3,6 @@ gresslib.dir/
 CMakeFiles/
 Debug/
 Release/
-sandbox/
 .vs/
 
 *.vcxproj
