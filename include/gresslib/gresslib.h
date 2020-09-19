@@ -8,7 +8,7 @@
 Enum to conveniently define window styles.
 author: Jonathan Duncanson
 */
-enum window_style
+enum GRESSLIB_WindowStyle
 {
 	WINDOW_BORDERED = 0,
 	WINDOW_BORDERLESS = 1 << 0,
@@ -21,7 +21,7 @@ enum window_style
 Enum to define input event types.
 author: Jonathan Duncanson
 */
-enum input_events
+enum GRESSLIB_InputEventType
 {
 	EVENT_NONE = 0,
 	KEY_PRESS = 1,
@@ -37,7 +37,7 @@ Enum to define keyboard keycodes.
 TODO: Add more keys.
 author: Jonathan Duncanson
 */
-enum keyboard_keycodes
+enum GRESSLIB_KeyboardKeycode
 {
 	KEYCODE_UNDEFINED = -1,
 	NUM_ZERO = 0,
@@ -119,22 +119,22 @@ author: Jonathan Duncanson
 */
 typedef struct
 {
-	enum input_events event_type;
+	enum GRESSLIB_InputEventType eventType;
 	union
 	{
-		enum keyboard_keycodes keycode;
-		unsigned int mouse_button;
-		int mouse_wheel_delta;
+		enum GRESSLIB_KeyboardKeycodes keycode;
+		unsigned int mouseButton;
+		int mouseWheelDelta;
 		struct
 		{
-			int mouse_x;
-			int mouse_y;
+			int mouseX;
+			int mouseY;
 		};
 	};
-} input_event;
+} GRESSLIB_InputEvent;
 
 //typedef for input callbacks
-typedef void (*input_callback)(input_event*);
+typedef void (*GRESSLIB_InputEventCallback)(GRESSLIB_InputEvent*);
 
 /*!
 Struct to define window properties.
@@ -146,7 +146,7 @@ typedef struct
 	unsigned int width;
 	unsigned int height;
 	unsigned int style;
-} window_descriptor;
+} GRESSLIB_WindowDescriptor;
 
 /*!
 Enum to define an actual window.
@@ -154,15 +154,15 @@ author: Jonathan Duncanson
 */
 typedef struct
 {
-	window_descriptor descriptor;
-	void* native_handle;
-	input_callback on_key_press;
-	input_callback on_key_release;
-	input_callback on_mouse_move;
-	input_callback on_mouse_button_press;
-	input_callback on_mouse_button_release;
-	input_callback on_mouse_wheel_move;
-} window;
+	GRESSLIB_WindowDescriptor descriptor;
+	void* nativeHandle;
+	GRESSLIB_InputEventCallback onKeyPress;
+	GRESSLIB_InputEventCallback onKeyRelease;
+	GRESSLIB_InputEventCallback onMouseMove;
+	GRESSLIB_InputEventCallback onMouseButtonPress;
+	GRESSLIB_InputEventCallback onMouseButtonRelease;
+	GRESSLIB_InputEventCallback onMouseWheelMove;
+} GRESSLIB_Window;
 
 /*!
 Struct to define OpenGL context properties.
@@ -170,54 +170,54 @@ author: Jonathan Duncanson
 */
 typedef struct
 {
-	unsigned int red_size;
-	unsigned int blue_size;
-	unsigned int green_size;
-	unsigned int alpha_size;
-	unsigned int depth_size;
-	unsigned int stencil_size;
-} glcontext_descriptor;
+	unsigned int redSize;
+	unsigned int blueSize;
+	unsigned int greenSize;
+	unsigned int alphaSize;
+	unsigned int depthSize;
+	unsigned int stencilSize;
+} GRESSLIB_GLContextDescriptor;
 
 /*!
 Function that creates a window. Returns NULL on failure.
 author: Jonathan Duncanson
 */
-window* create_window(window_descriptor* const window_desc);
+GRESSLIB_Window *GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor * const windowDesc);
 
 /*!
 Function that destroys a given window.
 author: Jonathan Duncanson
 */
-bool destroy_window(window* const window);
+bool GRESSLIB_DestroyWindow(GRESSLIB_Window * const window);
 
 /*!
 Function that processes os events for the window.
 author: Jonathan Duncanson
 */
-bool process_os_events(window* const window);
+bool GRESSLIB_ProcessOSEvents(GRESSLIB_Window * const window);
 
 /*!
 Function that creates an OpenGL context.
 author: Jonathan Duncanson
 */
-bool bootstrap_gl(window* const window, glcontext_descriptor* const context_desc);
+bool GRESSLIB_BootstrapGL(GRESSLIB_Window * const window, GRESSLIB_GLContextDescriptor* const contextDesc);
 
 /*!
 Function that swaps the backbuffer of the current OpenGL context.
 author: Jonathan Duncanson
 */
-void swap_gl_buffers(window* const window);
+void GRESSLIB_SwapGLBuffers(GRESSLIB_Window * const window);
 
 /*!
 Function that sets the callback for the relevant input event type.
 author: Jonathan Duncanson
 */
-void set_input_event_callback(window* const window, const enum input_events event, input_callback callback);
+void GRESSLIB_SetInputEventCallback(GRESSLIB_Window * const window, const enum GRESSLIB_InputEvent event, GRESSLIB_InputEventCallback callback);
 
-void show_cursor(window* const window);
+void GRESSLIB_ShowCursor(GRESSLIB_Window * const window);
 
-void hide_cursor(window* const window);
+void GRESSLIB_HideCursor(GRESSLIB_Window * const window);
 
-void warp_cursor(window* const window, const int x, const int y);
+void GRESSLIB_WarpCursor(GRESSLIB_Window * const window, const int x, const int y);
 
 #endif

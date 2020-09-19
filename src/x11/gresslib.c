@@ -53,7 +53,7 @@ const unsigned long _motif_wm_hints_function_maximize = 1 << 4;
 const unsigned long _motif_wm_hints_function_close = 1 << 5;
 
 
-window* create_window(window_descriptor* const window_desc)
+GRESSLIB_Window * GRESSLIB_CreateWindow(window_descriptor* const window_desc)
 {
     //open a connection to the display
     Display* display = XOpenDisplay(0);
@@ -89,7 +89,7 @@ window* create_window(window_descriptor* const window_desc)
     XFree(size);
 
     //allocate a new window struct
-    window *wnd = allocate_window(window_desc);
+   GRESSLIB_Window *wnd = allocate_window(window_desc);
 
     wnd->native_handle = NULL;
 
@@ -167,7 +167,7 @@ window* create_window(window_descriptor* const window_desc)
     return wnd;
 }
 
-bool destroy_window(window* window)
+bool destroy_window(GRESSLIB_Window * window)
 {
     x11_native_handle* native = (x11_native_handle*)window->native_handle;
 
@@ -188,7 +188,7 @@ bool destroy_window(window* window)
     return true;
 }
 
-bool process_os_events(window* const window)
+bool process_os_events(GRESSLIB_Window * const window)
 {
     x11_native_handle* native_handle = (x11_native_handle*)window->native_handle;
 
@@ -290,7 +290,7 @@ bool process_os_events(window* const window)
 	return true;
 }
 
-void show_cursor(window* const window)
+void show_cursor(GRESSLIB_Window * const window)
 {
     x11_native_handle* native = (x11_native_handle*)window->native_handle;
 
@@ -300,7 +300,7 @@ void show_cursor(window* const window)
     XFlush(native->display); 
 }
 
-void hide_cursor(window* const window)
+void hide_cursor(GRESSLIB_Window * const window)
 {
     x11_native_handle* native = (x11_native_handle*)window->native_handle;
 
@@ -310,7 +310,7 @@ void hide_cursor(window* const window)
     XFlush(native->display);
 }
 
-void warp_cursor(window* const window, const int x, const int y)
+void warp_cursor(GRESSLIB_Window * const window, const int x, const int y)
 {
     x11_native_handle* native = (x11_native_handle*)window->native_handle;
 

@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-bool bootstrap_gl(window* const window, glcontext_descriptor* const context_desc)
+bool GRESSLIB_BootstrapGL(GRESSLIB_Window* const window, GRESSLIB_GLContextDescriptor* const context_desc)
 {
 	//set up the pixel format descriptor
 	//TODO support more context details
@@ -20,19 +20,19 @@ bool bootstrap_gl(window* const window, glcontext_descriptor* const context_desc
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 
 	//framebuffer bits
-	pfd.cColorBits = context_desc->red_size + context_desc->green_size + context_desc->blue_size + context_desc->alpha_size;
+	pfd.cColorBits = context_desc->redSize + context_desc->greenSize + context_desc->blueSize + context_desc->alphaSize;
 
 	//R, G, B and A bit counts
-	pfd.cRedBits = context_desc->red_size;
-	pfd.cGreenBits = context_desc->green_size;
-	pfd.cBlueBits = context_desc->blue_size;
-	pfd.cAlphaBits = context_desc->alpha_size;
+	pfd.cRedBits = context_desc->redSize;
+	pfd.cGreenBits = context_desc->greenSize;
+	pfd.cBlueBits = context_desc->blueSize;
+	pfd.cAlphaBits = context_desc->alphaSize;
 
 	//depth and stencil bit sizes
-	pfd.cDepthBits = context_desc->depth_size;
-	pfd.cStencilBits = context_desc->stencil_size;
+	pfd.cDepthBits = context_desc->depthSize;
+	pfd.cStencilBits = context_desc->stencilSize;
 
-	win32_native_handle *native_handle = (win32_native_handle*)window->native_handle;
+	win32_native_handle *native_handle = (win32_native_handle*)window->nativeHandle;
 
 	native_handle->hdc = GetDC(native_handle->wnd);
 
@@ -45,16 +45,16 @@ bool bootstrap_gl(window* const window, glcontext_descriptor* const context_desc
 	return true;
 }
 
-void swap_gl_buffers(window* const window)
+void GRESSLIB_SwapGLBuffers(GRESSLIB_Window* const window)
 {
-	win32_native_handle* native = (win32_native_handle*)window->native_handle;
+	win32_native_handle* native = (win32_native_handle*)window->nativeHandle;
 
 	wglSwapLayerBuffers(native->hdc, WGL_SWAP_MAIN_PLANE);
 }
 
-void shutdown_gl(window* window)
+void GRESSLIB_ShutdownGL(GRESSLIB_Window* window)
 {
-	win32_native_handle *native = (win32_native_handle*)window->native_handle;
+	win32_native_handle *native = (win32_native_handle*)window->nativeHandle;
 
 	wglDeleteContext(native->gl_context);
 }

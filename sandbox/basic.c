@@ -1,8 +1,8 @@
 #include <include/gresslib/gresslib.h>
 
-void handle_input(input_event * ev)
+void handle_input(GRESSLIB_InputEvent * ev)
 {
-	switch (ev->event_type)
+	switch (ev->eventType)
 	{
 	case KEY_PRESS:
 	{
@@ -13,29 +13,29 @@ void handle_input(input_event * ev)
 
 int main()
 {
-	window_descriptor desc;
+	GRESSLIB_WindowDescriptor desc;
 	desc.width = 640;
 	desc.height = 480;
 	desc.style = WINDOW_BORDERED;
 	desc.title = "basic example";
 
-	window *wnd = create_window(&desc);
+	GRESSLIB_Window *wnd = GRESSLIB_CreateWindow(&desc);
 
-	set_input_event_callback(wnd, KEY_PRESS, handle_input);
+	GRESSLIB_SetInputEventCallback(wnd, KEY_PRESS, handle_input);
 
-	glcontext_descriptor cd;
-	cd.alpha_size = cd.blue_size = cd.green_size = cd.red_size = 8;
-	cd.depth_size = 24;
-	cd.stencil_size = 8;
+	GRESSLIB_GLContextDescriptor cd;
+	cd.alphaSize = cd.blueSize = cd.greenSize = cd.redSize = 8;
+	cd.depthSize = 24;
+	cd.stencilSize = 8;
 
-	bootstrap_gl(wnd, &cd);
+	GRESSLIB_BootstrapGL(wnd, &cd);
 
-	while (process_os_events(wnd))
+	while (GRESSLIB_ProcessOSEvents(wnd))
 	{
 		;
 	}
 
-	destroy_window(wnd);
+	GRESSLIB_DestroyWindow(wnd);
 
 	return 0;
 }

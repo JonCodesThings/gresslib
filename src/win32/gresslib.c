@@ -9,7 +9,7 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey);
 
-window* create_window(window_descriptor* const window_desc)
+GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_desc)
 {
 	LPCSTR name = "gresslib_win32_window_class";
 
@@ -55,21 +55,21 @@ window* create_window(window_descriptor* const window_desc)
 	if (win32_window == NULL)
 		return NULL;
 
-	window* window = allocate_window(window_desc);
+	GRESSLIB_Window* window = GRESSLIB_AllocateWindow(window_desc);
 
 	window->descriptor = *window_desc;
 
 	win32_native_handle *native_handle = malloc(sizeof(win32_native_handle));
 	native_handle->wnd = win32_window;
 
-	window->native_handle = native_handle;
+	window->nativeHandle = native_handle;
 
-	window->on_key_press = NULL;
-	window->on_key_release = NULL;
-	window->on_mouse_move = NULL;
-	window->on_mouse_button_press = NULL;
-	window->on_mouse_button_release = NULL;
-	window->on_mouse_wheel_move = NULL;
+	window->onKeyPress = NULL;
+	window->onKeyRelease = NULL;
+	window->onMouseMove = NULL;
+	window->onMouseButtonPress = NULL;
+	window->onMouseButtonRelease = NULL;
+	window->onMouseWheelMove = NULL;
 
 	LPCSTR property_name = "gresslib_handle";
 	SetProp(win32_window, property_name, window);
@@ -87,12 +87,12 @@ window* create_window(window_descriptor* const window_desc)
 	return window;
 }
 
-bool destroy_window(window* const window)
+bool GRESSLIB_DestroyWindow(GRESSLIB_Window* const window)
 {
 	if (!window)
 		return true;
 
-	win32_native_handle *native_handle = window->native_handle;
+	win32_native_handle *native_handle = window->nativeHandle;
 
 
 	LPCSTR property_name = "gresslib_handle";
@@ -115,7 +115,7 @@ bool destroy_window(window* const window)
 	return true;
 }
 
-bool process_os_events(window* const window)
+bool GRESSLIB_ProcessOSEvents(GRESSLIB_Window* const window)
 {
 	MSG msg = { 0 };
 	while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
@@ -161,9 +161,9 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		LPCSTR property_name = "gresslib_rawinput_buffer_size";
 
-		unsigned int stored_size = *(unsigned int*)GetProp(hwnd, property_name);
+		unsigned int storedSize = *(unsigned int*)GetProp(hwnd, property_name);
 
-		if (stored_size < size)
+		if (storedSize < size)
 		{
 			property_name = "gresslib_rawinput_buffer";
 			if ((LPBYTE*)GetProp(hwnd, property_name) != NULL)
@@ -186,9 +186,9 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		if (!input)
 			break;
 
-		window* window = GetProp(hwnd, "gresslib_handle");
+		GRESSLIB_Window* window = GetProp(hwnd, "gresslib_handle");
 
-		input_event ev;
+		GRESSLIB_InputEvent ev;
 
 		switch (input->header.dwType)
 		{
@@ -197,19 +197,19 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			ev.keycode = virtual_key_to_gresslib_keycode(input->data.keyboard.VKey);
 			if (input->data.keyboard.Flags == RI_KEY_BREAK)
 			{
-				if (window->on_key_release)
+				if (window->onKeyRelease)
 				{
-					ev.event_type = KEY_RELEASE;
-					window->on_key_release(&ev);
+					ev.eventType = KEY_RELEASE;
+					window->onKeyRelease(&ev);
 				}
 
 			}
 			else if (input->data.keyboard.Flags == RI_KEY_MAKE)
 			{
-				if (window->on_key_press)
+				if (window->onKeyPress)
 				{
-					ev.event_type = KEY_PRESS;
-					window->on_key_press(&ev);
+					ev.eventType = KEY_PRESS;
+					window->onKeyPress(&ev);
 				}
 
 			}
@@ -223,14 +223,14 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			case MOUSE_MOVE_RELATIVE:
 			case MOUSE_MOVE_ABSOLUTE:
 			{
-				ev.event_type = MOUSE_MOVE;
+				ev.eventType = MOUSE_MOVE;
 				POINT pos;
 				GetCursorPos(&pos);
 				ScreenToClient(hwnd, &pos);
-				ev.mouse_x = pos.x;
-				ev.mouse_y = pos.y;
-				if (window->on_mouse_move)
-					window->on_mouse_move(&ev);
+				ev.mouseX = pos.x;
+				ev.mouseY = pos.y;
+				if (window->onMouseMove)
+					window->onMouseMove(&ev);
 				break;
 			}
 			}
@@ -244,20 +244,20 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			case RI_MOUSE_BUTTON_3_DOWN:
 			case RI_MOUSE_BUTTON_4_DOWN:
 			case RI_MOUSE_BUTTON_5_DOWN:
-				ev.event_type = MOUSEBUTTON_PRESS;
+				ev.eventType = MOUSEBUTTON_PRESS;
 				break;
 			case RI_MOUSE_BUTTON_1_UP:
 			case RI_MOUSE_BUTTON_2_UP:
 			case RI_MOUSE_BUTTON_3_UP:
 			case RI_MOUSE_BUTTON_4_UP:
 			case RI_MOUSE_BUTTON_5_UP:
-				ev.event_type = MOUSEBUTTON_RELEASE;
+				ev.eventType = MOUSEBUTTON_RELEASE;
 				break;
 			case RI_MOUSE_WHEEL:
-				ev.event_type = MOUSEWHEEL_MOVE;
-				ev.mouse_wheel_delta = input->data.mouse.usButtonData;
-				if (window->on_mouse_wheel_move)
-					window->on_mouse_wheel_move(&ev);
+				ev.eventType = MOUSEWHEEL_MOVE;
+				ev.mouseWheelDelta = input->data.mouse.usButtonData;
+				if (window->onMouseWheelMove)
+					window->onMouseWheelMove(&ev);
 				break;
 			}
 
@@ -267,23 +267,23 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				break;
 			case RI_MOUSE_BUTTON_1_DOWN:
 			case RI_MOUSE_BUTTON_1_UP:
-				ev.mouse_button = 1;
+				ev.mouseButton = 1;
 				break;
 			case RI_MOUSE_BUTTON_2_DOWN:
 			case RI_MOUSE_BUTTON_2_UP:
-				ev.mouse_button = 2;
+				ev.mouseButton = 2;
 				break;
 			case RI_MOUSE_BUTTON_3_DOWN:
 			case RI_MOUSE_BUTTON_3_UP:
-				ev.mouse_button = 3;
+				ev.mouseButton = 3;
 				break;
 			case RI_MOUSE_BUTTON_4_DOWN:
 			case RI_MOUSE_BUTTON_4_UP:
-				ev.mouse_button = 4;
+				ev.mouseButton = 4;
 				break;
 			case RI_MOUSE_BUTTON_5_DOWN:
 			case RI_MOUSE_BUTTON_5_UP:
-				ev.mouse_button = 5;
+				ev.mouseButton = 5;
 				break;
 			}
 			break;
@@ -298,19 +298,19 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 }
 
 
-void show_cursor(window * const window)
+void GRESSLIB_ShowCursor(GRESSLIB_Window * const window)
 {
 	while (ShowCursor(true) <= 0)
 		ShowCursor(true);
 }
 
-void hide_cursor(window * const window)
+void GRESSLIB_HideCursor(GRESSLIB_Window * const window)
 {
 	while (ShowCursor(false) >= 0)
 		ShowCursor(false);
 }
 
-void warp_cursor(window * const window, const int x, const int y)
+void GRESSLIB_WarpCursor(GRESSLIB_Window * const window, const int x, const int y)
 {
 	SetCursorPos(x, y);
 }
