@@ -13,6 +13,8 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 {
 	LPCSTR name = "gresslib_win32_window_class";
 
+	RECT r = {0, 0, window_desc->width, window_desc->height};
+
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = Win32WindowProc;
 	wc.hInstance = GetModuleHandleW(NULL);
@@ -50,7 +52,9 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 	if (!(window_desc->style & WINDOW_RESIZEABLE))
 		style = style&~WS_MAXIMIZEBOX;
 
-	HWND win32_window = CreateWindowEx(0, name, window_title, style&~WS_SIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, window_desc->width, window_desc->height, NULL, NULL, wc.hInstance, NULL);
+	AdjustWindowRect(&r, style, false);
+
+	HWND win32_window = CreateWindowEx(0, name, window_title, style&~WS_SIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
 
 	if (win32_window == NULL)
 		return NULL;
@@ -213,7 +217,7 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				}
 
 			}
-			break;
+			return TRUE;
 		}
 		case RIM_TYPEMOUSE:
 			switch (input->data.mouse.usFlags)
@@ -286,14 +290,17 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				ev.mouseButton = 5;
 				break;
 			}
-			break;
+			GRESSLIB_RunInputEventCallback(window, &ev);
+
+			return TRUE;
 		default:
 			break;
 		}
 		break;
 	}
-	}
+	
 
+	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 

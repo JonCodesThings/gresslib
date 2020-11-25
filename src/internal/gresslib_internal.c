@@ -19,32 +19,27 @@ GRESSLIB_Window* GRESSLIB_AllocateWindow(GRESSLIB_WindowDescriptor* const window
     return wnd;
 }
 
-void GRESSLIB_SetInputEventCallback(GRESSLIB_Window* const window, const enum GRESSLIB_InputEventType event, GRESSLIB_InputEventCallback callback)
+void GRESSLIB_SetInputEventCallback(GRESSLIB_Window * const window, const enum GRESSLIB_InputEventType event, GRESSLIB_InputEventCallback callback)
 {
 	//set the event callback
-	switch (event)
-	{
-	default:
-		break;
-	case KEY_PRESS:
+
+	if (event & KEY_PRESS)
 		window->onKeyPress = callback;
-		break;
-	case KEY_RELEASE:
+
+	if (event & KEY_RELEASE)
 		window->onKeyRelease = callback;
-		break;
-	case MOUSE_MOVE:
+
+	if (event & MOUSE_MOVE)
 		window->onMouseMove = callback;
-		break;
-	case MOUSEBUTTON_PRESS:
+
+	if (event & MOUSEBUTTON_PRESS)
 		window->onMouseButtonPress = callback;
-		break;
-	case MOUSEBUTTON_RELEASE:
+
+	if (event & MOUSEBUTTON_RELEASE)
 		window->onMouseButtonRelease = callback;
-		break;
-	case MOUSEWHEEL_MOVE:
+
+	if (event & MOUSEWHEEL_MOVE)
 		window->onMouseWheelMove = callback;
-		break;
-	}
 }
 
 void GRESSLIB_RunInputEventCallback(GRESSLIB_Window* const window, GRESSLIB_InputEvent* const event) 

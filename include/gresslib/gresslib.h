@@ -24,12 +24,12 @@ author: Jonathan Duncanson
 enum GRESSLIB_InputEventType
 {
 	EVENT_NONE = 0,
-	KEY_PRESS = 1,
-	KEY_RELEASE = 2,
-	MOUSE_MOVE = 3,
-	MOUSEBUTTON_PRESS = 4,
-	MOUSEBUTTON_RELEASE = 5,
-	MOUSEWHEEL_MOVE = 6
+	KEY_PRESS = 1 << 0,
+	KEY_RELEASE = 1 << 1,
+	MOUSE_MOVE = 1 << 2,
+	MOUSEBUTTON_PRESS = 1 << 3,
+	MOUSEBUTTON_RELEASE = 1 << 4,
+	MOUSEWHEEL_MOVE = 1 << 5
 };
 
 /*!
@@ -122,7 +122,7 @@ typedef struct
 	enum GRESSLIB_InputEventType eventType;
 	union
 	{
-		enum GRESSLIB_KeyboardKeycodes keycode;
+		enum GRESSLIB_KeyboardKeycode keycode;
 		unsigned int mouseButton;
 		int mouseWheelDelta;
 		struct
@@ -212,7 +212,7 @@ void GRESSLIB_SwapGLBuffers(GRESSLIB_Window * const window);
 Function that sets the callback for the relevant input event type.
 author: Jonathan Duncanson
 */
-void GRESSLIB_SetInputEventCallback(GRESSLIB_Window * const window, const enum GRESSLIB_InputEvent event, GRESSLIB_InputEventCallback callback);
+void GRESSLIB_SetInputEventCallback(GRESSLIB_Window * const window, const enum GRESSLIB_InputEventType event, GRESSLIB_InputEventCallback callback);
 
 void GRESSLIB_ShowCursor(GRESSLIB_Window * const window);
 
