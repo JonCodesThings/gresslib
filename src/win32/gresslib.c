@@ -319,7 +319,12 @@ void GRESSLIB_HideCursor(GRESSLIB_Window * const window)
 
 void GRESSLIB_WarpCursor(GRESSLIB_Window * const window, const int x, const int y)
 {
-	SetCursorPos(x, y);
+	win32_native_handle *native_handle = window->nativeHandle;
+	POINT pt;
+	pt.x = x;
+	pt.y = y;
+	ClientToScreen(native_handle->wnd, &pt);
+	SetCursorPos(pt.x, pt.y);
 }
 
 
