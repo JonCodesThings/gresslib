@@ -5,7 +5,7 @@
 GRESSLIB_Window* GRESSLIB_AllocateWindow(GRESSLIB_WindowDescriptor* const window_descriptor)
 {
 	//allocate the window struct
-    void* window_alloc = malloc(sizeof(GRESSLIB_Window));
+    void* window_alloc = GRESSLIB_Allocate(sizeof(GRESSLIB_Window));
 
 	if (window_alloc == NULL)
 		return NULL;

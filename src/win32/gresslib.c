@@ -5,6 +5,19 @@
 
 #include <windows.h>
 
+GRESSLIB_ALLOC GRESSLIB_Allocate = &malloc;
+GRESSLIB_DEALLOC GRESSLIB_Deallocate = &free;
+
+void OSLIB_SetAllocationFunction(GRESSLIB_ALLOC const alloc)
+{
+	GRESSLIB_Allocate = alloc;
+}
+
+void GRESSLIB_SetDeallocationFunction(GRESSLIB_DEALLOC  const dealloc)
+{
+	GRESSLIB_Deallocate = dealloc;
+}
+
 LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey);
@@ -63,7 +76,7 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 
 	window->descriptor = *window_desc;
 
-	win32_native_handle *native_handle = malloc(sizeof(win32_native_handle));
+	win32_native_handle *native_handle = GRESSLIB_Allocate(sizeof(win32_native_handle));
 	native_handle->wnd = win32_window;
 
 	window->nativeHandle = native_handle;
@@ -82,7 +95,7 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 	SetProp(win32_window, property_name, NULL);
 
 	property_name = "gresslib_rawinput_buffer_size";
-	unsigned int* size = malloc(sizeof(unsigned int));
+	unsigned int* size = GRESSLIB_Allocate(sizeof(unsigned int));
 	*size = 0;
 	SetProp(win32_window, property_name, size);
 	
@@ -104,7 +117,7 @@ bool GRESSLIB_DestroyWindow(GRESSLIB_Window* const window)
 
 	property_name = "gresslib_rawinput_buffer";
 	if ((LPBYTE*)GetProp(native_handle->wnd, property_name) != NULL)
-		free((LPBYTE*)GetProp(native_handle->wnd, property_name));
+		GRESSLIB_Deallocate((LPBYTE*)GetProp(native_handle->wnd, property_name));
 
 	RemoveProp(native_handle->wnd, property_name);
 
@@ -114,7 +127,7 @@ bool GRESSLIB_DestroyWindow(GRESSLIB_Window* const window)
 
 	DestroyWindow(native_handle->wnd);
 
-	free(window);
+	GRESSLIB_Deallocate(window);
 
 	return true;
 }
@@ -171,9 +184,9 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		{
 			property_name = "gresslib_rawinput_buffer";
 			if ((LPBYTE*)GetProp(hwnd, property_name) != NULL)
-				free((LPBYTE*)GetProp(hwnd, property_name));
+				GRESSLIB_Deallocate((LPBYTE*)GetProp(hwnd, property_name));
 
-			LPBYTE rawinput_buffer = malloc(size);
+			LPBYTE rawinput_buffer = GRESSLIB_Allocate(size);
 			if (!rawinput_buffer)
 				return 1;
 

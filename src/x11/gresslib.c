@@ -94,7 +94,7 @@ GRESSLIB_Window * GRESSLIB_CreateWindow(window_descriptor* const window_desc)
     wnd->native_handle = NULL;
 
     //manually allocate a native handle struct and set some members
-    x11_native_handle* native_handle = malloc(sizeof(x11_native_handle));
+    x11_native_handle* native_handle = GRESSLIB_Allocate(sizeof(x11_native_handle));
     native_handle->display = display;
     native_handle->window = w;
     native_handle->gl_context = NULL;
@@ -181,7 +181,7 @@ bool destroy_window(GRESSLIB_Window * window)
 
     //close the display and free the native handle
     XCloseDisplay(native->display);
-    free(native);
+    GRESSLIB_Deallocate(native);
 
     window->native_handle = NULL;
 

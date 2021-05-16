@@ -3,6 +3,18 @@
 
 #include <stdbool.h>
 
+//NOTE: @Jon
+//Function pointer typedefs for memory functions
+typedef void* (*GRESSLIB_ALLOC)(size_t);
+typedef void (*GRESSLIB_DEALLOC)(void*);
+
+extern GRESSLIB_ALLOC GRESSLIB_Allocate;
+extern GRESSLIB_DEALLOC GRESSLIB_Deallocate;
+
+void GRESSLIB_SetAllocationFunction(GRESSLIB_ALLOC const alloc);
+
+void GRESSLIB_SetDeallocationFunction(GRESSLIB_DEALLOC const dealloc);
+
 
 /*!
 Enum to conveniently define window styles.
