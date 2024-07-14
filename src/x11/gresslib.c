@@ -52,6 +52,15 @@ const unsigned long _motif_wm_hints_function_minimize = 1 << 3;
 const unsigned long _motif_wm_hints_function_maximize = 1 << 4;
 const unsigned long _motif_wm_hints_function_close = 1 << 5;
 
+GRESSLIB_ALLOC GRESSLIB_Allocate = &malloc;
+GRESSLIB_DEALLOC GRESSLIB_Deallocate = &free;
+
+void GRESSLIB_SetAllocator(GRESSLIB_ALLOC const alloc, GRESSLIB_DEALLOC const dealloc)
+{
+    GRESSLIB_Allocate = alloc;
+    GRESSLIB_Deallocate = dealloc;
+}
+
 
 GRESSLIB_Window * GRESSLIB_CreateWindow(window_descriptor* const window_desc)
 {

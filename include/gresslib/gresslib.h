@@ -11,10 +11,7 @@ typedef void (*GRESSLIB_DEALLOC)(void*);
 extern GRESSLIB_ALLOC GRESSLIB_Allocate;
 extern GRESSLIB_DEALLOC GRESSLIB_Deallocate;
 
-void GRESSLIB_SetAllocationFunction(GRESSLIB_ALLOC const alloc);
-
-void GRESSLIB_SetDeallocationFunction(GRESSLIB_DEALLOC const dealloc);
-
+void GRESSLIB_SetAllocator(GRESSLIB_ALLOC const alloc, GRESSLIB_DEALLOC const dealloc);
 
 /*!
 Enum to conveniently define window styles.

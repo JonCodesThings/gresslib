@@ -8,13 +8,9 @@
 GRESSLIB_ALLOC GRESSLIB_Allocate = &malloc;
 GRESSLIB_DEALLOC GRESSLIB_Deallocate = &free;
 
-void OSLIB_SetAllocationFunction(GRESSLIB_ALLOC const alloc)
+void GRESSLIB_SetAllocator(GRESSLIB_ALLOC const alloc, GRESSLIB_DEALLOC const dealloc)
 {
 	GRESSLIB_Allocate = alloc;
-}
-
-void GRESSLIB_SetDeallocationFunction(GRESSLIB_DEALLOC  const dealloc)
-{
 	GRESSLIB_Deallocate = dealloc;
 }
 
@@ -100,6 +96,7 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 	SetProp(win32_window, property_name, size);
 	
 	ShowWindow(win32_window, SW_SHOW);
+	ShowCursor(true);
 
 	return window;
 }
