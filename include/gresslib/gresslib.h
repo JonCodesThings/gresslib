@@ -1,9 +1,6 @@
 #ifndef GRESSLIB_H
 #define GRESSLIB_H
 
-#include <stdbool.h>
-
-//NOTE: @Jon
 //Function pointer typedefs for memory functions
 typedef void* (*GRESSLIB_ALLOC)(size_t);
 typedef void (*GRESSLIB_DEALLOC)(void*);
@@ -13,10 +10,7 @@ extern GRESSLIB_DEALLOC GRESSLIB_Deallocate;
 
 void GRESSLIB_SetAllocator(GRESSLIB_ALLOC const alloc, GRESSLIB_DEALLOC const dealloc);
 
-/*!
-Enum to conveniently define window styles.
-author: Jonathan Duncanson
-*/
+// Enum to conveniently define window styles
 enum GRESSLIB_WindowStyle
 {
 	WINDOW_BORDERED = 0,
@@ -26,10 +20,7 @@ enum GRESSLIB_WindowStyle
 	WINDOW_CLOSEABLE = 1 << 3
 };
 
-/*!
-Enum to define input event types.
-author: Jonathan Duncanson
-*/
+// Enum to define input event types
 enum GRESSLIB_InputEventType
 {
 	EVENT_NONE = 0,
@@ -41,11 +32,7 @@ enum GRESSLIB_InputEventType
 	MOUSEWHEEL_MOVE = 1 << 5
 };
 
-/*!
-Enum to define keyboard keycodes.
-TODO: Add more keys.
-author: Jonathan Duncanson
-*/
+// Enum to define keyboard keycodes
 enum GRESSLIB_KeyboardKeycode
 {
 	KEYCODE_UNDEFINED = -1,
@@ -122,10 +109,7 @@ enum GRESSLIB_KeyboardKeycode
 	F12 = 70
 };
 
-/*!
-Struct to store input event data.
-author: Jonathan Duncanson
-*/
+// Struct to store input event data
 typedef struct
 {
 	enum GRESSLIB_InputEventType eventType;
@@ -145,10 +129,7 @@ typedef struct
 //typedef for input callbacks
 typedef void (*GRESSLIB_InputEventCallback)(GRESSLIB_InputEvent*);
 
-/*!
-Struct to define window properties.
-author: Jonathan Duncanson
-*/
+// Struct to define window properties
 typedef struct
 {
 	const char* title;
@@ -157,10 +138,7 @@ typedef struct
 	unsigned int style;
 } GRESSLIB_WindowDescriptor;
 
-/*!
-Enum to define an actual window.
-author: Jonathan Duncanson
-*/
+// Enum to define an actual window
 typedef struct
 {
 	GRESSLIB_WindowDescriptor descriptor;
@@ -173,10 +151,7 @@ typedef struct
 	GRESSLIB_InputEventCallback onMouseWheelMove;
 } GRESSLIB_Window;
 
-/*!
-Struct to define OpenGL context properties.
-author: Jonathan Duncanson
-*/
+// Struct to define OpenGL context properties
 typedef struct
 {
 	unsigned int redSize;
@@ -187,40 +162,42 @@ typedef struct
 	unsigned int stencilSize;
 } GRESSLIB_GLContextDescriptor;
 
-/*!
-Function that creates a window. Returns NULL on failure.
-author: Jonathan Duncanson
-*/
+// Allocates and creates a window
+// Returns a valid pointer on success, NULL on failure
 GRESSLIB_Window *GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor * const windowDesc);
 
-/*!
-Function that destroys a given window.
-author: Jonathan Duncanson
-*/
-bool GRESSLIB_DestroyWindow(GRESSLIB_Window * const window);
+enum GRESSLIB_DestroyWindowResult
+{
+	GRESSLIB_DESTROYWINDOW_Failed,
+	GRESSLIB_DESTROYWINDOW_Success
+};
 
-/*!
-Function that processes os events for the window.
-author: Jonathan Duncanson
-*/
-bool GRESSLIB_ProcessOSEvents(GRESSLIB_Window * const window);
+// Destroys a given window
+// This deallocates the passed in GRESSLIB_Window
+enum GRESSLIB_DestroyWindowResult GRESSLIB_DestroyWindow(GRESSLIB_Window * const window);
 
-/*!
-Function that creates an OpenGL context.
-author: Jonathan Duncanson
-*/
-bool GRESSLIB_BootstrapGL(GRESSLIB_Window * const window, GRESSLIB_GLContextDescriptor* const contextDesc);
+enum GRESSLIB_ProcessOSEventsResult
+{
+	GRESSLIB_PROCESSOSEVENTS_NoQuitEvent,
+	GRESSLIB_PROCESSOSEVENTS_QuitEvent
+};
 
-/*!
-Function that swaps the backbuffer of the current OpenGL context.
-author: Jonathan Duncanson
-*/
+// Processes OS-level window events
+enum GRESSLIB_ProcessOSEventsResult GRESSLIB_ProcessOSEvents(GRESSLIB_Window * const window);
+
+enum GRESSLIB_BootstrapGLResult
+{
+	GRESSLIB_BOOTSTRAPGL_FAILED,
+	GRESSLIB_BOOTSTRAPGL_SUCCESS
+};
+
+// Creates an OpenGL context based on the passed in context descriptor
+enum GRESSLIB_BootstrapGLResult GRESSLIB_BootstrapGL(GRESSLIB_Window * const window, GRESSLIB_GLContextDescriptor* const contextDesc);
+
+// Function that swaps the backbuffer of the current active OpenGL context.
 void GRESSLIB_SwapGLBuffers(GRESSLIB_Window * const window);
 
-/*!
-Function that sets the callback for the relevant input event type.
-author: Jonathan Duncanson
-*/
+// Function that sets the callback for the relevant input event type.
 void GRESSLIB_SetInputEventCallback(GRESSLIB_Window * const window, const enum GRESSLIB_InputEventType event, GRESSLIB_InputEventCallback callback);
 
 void GRESSLIB_ShowCursor(GRESSLIB_Window * const window);

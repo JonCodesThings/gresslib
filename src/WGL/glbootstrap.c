@@ -11,7 +11,7 @@
 
 typedef HGLRC(WINAPI * PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC hDC, HGLRC hShareContext, const int *attribList);
 
-bool GRESSLIB_BootstrapGL(GRESSLIB_Window* const window, GRESSLIB_GLContextDescriptor* const context_desc)
+enum GRESSLIB_BootstrapGLResult GRESSLIB_BootstrapGL(GRESSLIB_Window* const window, GRESSLIB_GLContextDescriptor* const context_desc)
 {
 	//set up the pixel format descriptor
 	//TODO support more context details
@@ -59,20 +59,23 @@ bool GRESSLIB_BootstrapGL(GRESSLIB_Window* const window, GRESSLIB_GLContextDescr
 
 	PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
 
-	if (wglCreateContextAttribsARB != NULL)
+	if (wglCreateContextAttribsARB == NULL)
 	{
-		HGLRC modernContext = wglCreateContextAttribsARB(native_handle->hdc, NULL, attribs);
-		if (modernContext != NULL)
-		{
-			wglMakeCurrent(native_handle->hdc, modernContext);
-			wglDeleteContext(native_handle->gl_context);
-			native_handle->gl_context = modernContext;
-		}
+		return GRESSLIB_BOOTSTRAPGL_FAILED;
 	}
-	else
-		return false;
 
-	return true;
+
+	HGLRC modernContext = wglCreateContextAttribsARB(native_handle->hdc, NULL, attribs);
+	if (modernContext == NULL)
+	{
+		GRESSLIB_BOOTSTRAPGL_FAILED;
+	}
+
+	wglMakeCurrent(native_handle->hdc, modernContext);
+	wglDeleteContext(native_handle->gl_context);
+	native_handle->gl_context = modernContext;
+
+	return GRESSLIB_BOOTSTRAPGL_SUCCESS;
 }
 
 void GRESSLIB_SwapGLBuffers(GRESSLIB_Window* const window)
@@ -80,12 +83,11 @@ void GRESSLIB_SwapGLBuffers(GRESSLIB_Window* const window)
 	win32_native_handle* native = (win32_native_handle*)window->nativeHandle;
 
 	wglSwapLayerBuffers(native->hdc, WGL_SWAP_MAIN_PLANE);
-	//SwapBuffers(native->hdc);
 }
 
 void GRESSLIB_ShutdownGL(GRESSLIB_Window* window)
 {
 	win32_native_handle *native = (win32_native_handle*)window->nativeHandle;
-
+	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(native->gl_context);
 }

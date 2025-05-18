@@ -8,6 +8,12 @@
 GRESSLIB_ALLOC GRESSLIB_Allocate = &malloc;
 GRESSLIB_DEALLOC GRESSLIB_Deallocate = &free;
 
+static LPWSTR GRESSLIB_WindowClass = L"gresslib_Win32_WindowClass";
+static LPCWSTR GRESSLIB_HandlePropertyName = L"gresslib_handle";
+static LPCWSTR GRESSLIB_RawInputBufferPropertyName = L"gresslib_rawinput_buffer";
+static LPCWSTR GRESSLIB_RawInputBufferSizePropertyName = L"gresslib_rawinput_buffersize";
+
+
 void GRESSLIB_SetAllocator(GRESSLIB_ALLOC const alloc, GRESSLIB_DEALLOC const dealloc)
 {
 	GRESSLIB_Allocate = alloc;
@@ -20,17 +26,24 @@ enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey);
 
 GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_desc)
 {
-	LPCSTR name = "gresslib_win32_window_class";
-
 	RECT r = {0, 0, window_desc->width, window_desc->height};
 
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = Win32WindowProc;
 	wc.hInstance = GetModuleHandleW(NULL);
-	wc.lpszClassName = name;
+	wc.lpszClassName = GRESSLIB_WindowClass;
 
 	if (RegisterClass(&wc) == FALSE)
 		return NULL;
+
+	LPWSTR wndTitle = GRESSLIB_WindowClass;
+	if (window_desc->title != NULL)
+	{
+		size_t titleLen = strlen(window_desc->title) + 1;
+		wndTitle = GRESSLIB_Allocate(sizeof(wchar_t) * titleLen);
+		size_t convertedChars = 0;
+		mbstowcs_s(&convertedChars, wndTitle, titleLen, window_desc->title, titleLen);
+	}
 
 	RAWINPUTDEVICE devices[2];
 
@@ -49,8 +62,6 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 	if (RegisterRawInputDevices(devices, 2, sizeof(RAWINPUTDEVICE)) == FALSE)
 		return NULL;
 
-	LPCSTR window_title = window_desc->title;
-
 	unsigned int style;
 
 	if (window_desc->style & WINDOW_BORDERLESS)
@@ -61,9 +72,9 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 	if (!(window_desc->style & WINDOW_RESIZEABLE))
 		style = style&~WS_MAXIMIZEBOX;
 
-	AdjustWindowRect(&r, style, false);
+	AdjustWindowRect(&r, style, FALSE);
 
-	HWND win32_window = CreateWindowEx(0, name, window_title, style&~WS_SIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
+	HWND win32_window = CreateWindowExW(0, GRESSLIB_WindowClass, wndTitle, style&~WS_SIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
 
 	if (win32_window == NULL)
 		return NULL;
@@ -84,52 +95,42 @@ GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_d
 	window->onMouseButtonRelease = NULL;
 	window->onMouseWheelMove = NULL;
 
-	LPCSTR property_name = "gresslib_handle";
-	SetProp(win32_window, property_name, window);
+	SetPropW(win32_window, GRESSLIB_HandlePropertyName, window);
+	SetPropW(win32_window, GRESSLIB_RawInputBufferPropertyName, NULL);
 
-	property_name = "gresslib_rawinput_buffer";
-	SetProp(win32_window, property_name, NULL);
-
-	property_name = "gresslib_rawinput_buffer_size";
 	unsigned int* size = GRESSLIB_Allocate(sizeof(unsigned int));
 	*size = 0;
-	SetProp(win32_window, property_name, size);
+	SetPropW(win32_window, GRESSLIB_RawInputBufferSizePropertyName, size);
 	
 	ShowWindow(win32_window, SW_SHOW);
-	ShowCursor(true);
 
 	return window;
 }
 
-bool GRESSLIB_DestroyWindow(GRESSLIB_Window* const window)
+enum GRESSLIB_DestroyWindowResult GRESSLIB_DestroyWindow(GRESSLIB_Window* const window)
 {
 	if (!window)
-		return true;
+		return GRESSLIB_DESTROYWINDOW_Failed;
 
 	win32_native_handle *native_handle = window->nativeHandle;
 
+	if ((LPBYTE*)GetProp(native_handle->wnd, GRESSLIB_RawInputBufferPropertyName) != NULL)
+		GRESSLIB_Deallocate((LPBYTE*)GetProp(native_handle->wnd, GRESSLIB_RawInputBufferPropertyName));
 
-	LPCSTR property_name = "gresslib_handle";
-	RemoveProp(native_handle->wnd, property_name);
+	RemoveProp(native_handle->wnd, GRESSLIB_HandlePropertyName);
+	RemoveProp(native_handle->wnd, GRESSLIB_RawInputBufferPropertyName);
+	RemoveProp(native_handle->wnd, GRESSLIB_RawInputBufferSizePropertyName);
 
-	property_name = "gresslib_rawinput_buffer";
-	if ((LPBYTE*)GetProp(native_handle->wnd, property_name) != NULL)
-		GRESSLIB_Deallocate((LPBYTE*)GetProp(native_handle->wnd, property_name));
-
-	RemoveProp(native_handle->wnd, property_name);
-
-	property_name = "gresslib_rawinput_buffer_size";
-	RemoveProp(native_handle->wnd, property_name);
 	SendMessage(native_handle->wnd, WM_QUIT, 0, 0);
 
 	DestroyWindow(native_handle->wnd);
 
 	GRESSLIB_Deallocate(window);
 
-	return true;
+	return GRESSLIB_DESTROYWINDOW_Success;
 }
 
-bool GRESSLIB_ProcessOSEvents(GRESSLIB_Window* const window)
+enum GRESSLIB_ProcessOSEventsResult GRESSLIB_ProcessOSEvents(GRESSLIB_Window* const window)
 {
 	MSG msg = { 0 };
 	while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
@@ -138,9 +139,9 @@ bool GRESSLIB_ProcessOSEvents(GRESSLIB_Window* const window)
 		DispatchMessage(&msg);
 
 		if (msg.message == WM_QUIT)
-			return false;
+			return GRESSLIB_PROCESSOSEVENTS_QuitEvent;
 	}
-	return true;
+	return GRESSLIB_PROCESSOSEVENTS_NoQuitEvent;
 }
 
 LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -170,37 +171,33 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	}
 	case WM_INPUT:
 	{
-		unsigned int size;
+		unsigned int size = 0;
 		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
 
-		LPCSTR property_name = "gresslib_rawinput_buffer_size";
-
-		unsigned int storedSize = *(unsigned int*)GetProp(hwnd, property_name);
+		unsigned int storedSize = *(unsigned int*)GetPropW(hwnd, GRESSLIB_RawInputBufferSizePropertyName);
 
 		if (storedSize < size)
 		{
-			property_name = "gresslib_rawinput_buffer";
-			if ((LPBYTE*)GetProp(hwnd, property_name) != NULL)
-				GRESSLIB_Deallocate((LPBYTE*)GetProp(hwnd, property_name));
+			if ((LPBYTE*)GetProp(hwnd, GRESSLIB_RawInputBufferPropertyName) != NULL)
+				GRESSLIB_Deallocate((LPBYTE*)GetPropW(hwnd, GRESSLIB_RawInputBufferPropertyName));
 
 			LPBYTE rawinput_buffer = GRESSLIB_Allocate(size);
 			if (!rawinput_buffer)
 				return 1;
 
-			SetProp(hwnd, property_name, rawinput_buffer);
+			SetProp(hwnd, GRESSLIB_RawInputBufferPropertyName, rawinput_buffer);
 
-			property_name = "gresslib_rawinput_buffer_size";
-			unsigned int* sz = (unsigned int *)(GetProp(hwnd, property_name));
+			unsigned int* sz = (unsigned int *)(GetPropW(hwnd, GRESSLIB_RawInputBufferSizePropertyName));
 			*sz = size;
 		}
 
-		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, (RAWINPUT*)GetProp(hwnd, "gresslib_rawinput_buffer"), &size, sizeof(RAWINPUTHEADER));
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, (RAWINPUT*)GetPropW(hwnd, GRESSLIB_RawInputBufferPropertyName), &size, sizeof(RAWINPUTHEADER));
 
-		RAWINPUT* input = (RAWINPUT*)GetProp(hwnd, "gresslib_rawinput_buffer");
+		RAWINPUT* input = (RAWINPUT*)GetPropW(hwnd, GRESSLIB_RawInputBufferPropertyName);
 		if (!input)
 			break;
 
-		GRESSLIB_Window* window = GetProp(hwnd, "gresslib_handle");
+		GRESSLIB_Window* window = GetPropW(hwnd, GRESSLIB_HandlePropertyName);
 
 		GRESSLIB_InputEvent ev;
 
@@ -317,14 +314,14 @@ LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void GRESSLIB_ShowCursor(GRESSLIB_Window * const window)
 {
-	while (ShowCursor(true) <= 0)
-		ShowCursor(true);
+	while (ShowCursor(TRUE) <= 0)
+		ShowCursor(TRUE);
 }
 
 void GRESSLIB_HideCursor(GRESSLIB_Window * const window)
 {
-	while (ShowCursor(false) >= 0)
-		ShowCursor(false);
+	while (ShowCursor(FALSE) >= 0)
+		ShowCursor(FALSE);
 }
 
 void GRESSLIB_WarpCursor(GRESSLIB_Window * const window, const int x, const int y)
