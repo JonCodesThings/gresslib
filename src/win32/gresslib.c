@@ -22,7 +22,7 @@ void GRESSLIB_SetAllocator(GRESSLIB_ALLOC const alloc, GRESSLIB_DEALLOC const de
 
 LRESULT CALLBACK Win32WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey);
+enum GRESSLIB_KeyboardKeycode virtual_key_to_gresslib_keycode(USHORT vkey);
 
 GRESSLIB_Window* GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_desc)
 {
@@ -335,7 +335,7 @@ void GRESSLIB_WarpCursor(GRESSLIB_Window * const window, const int x, const int 
 }
 
 
-enum keyboard_keycodes virtual_key_to_gresslib_keycode(USHORT vkey)
+enum GRESSLIB_KeyboardKeycode virtual_key_to_gresslib_keycode(USHORT vkey)
 {
 	switch (vkey)
 	{
