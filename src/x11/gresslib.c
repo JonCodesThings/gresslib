@@ -12,11 +12,7 @@
 
 #include <stdio.h>
 
-/*!
-Function to convert X11 keysyms to gresslib keycodes
-author: Jonathan Duncanson
-*/
-enum keyboard_keycodes x_key_to_gresslib_key(KeySym keysym);
+enum GRESSLIB_KeyboardKeycode x_key_to_gresslib_key(KeySym keysym);
 
 //created using information from
 //https://www.tonyobryan.com//index.php?article=9
@@ -62,7 +58,7 @@ void GRESSLIB_SetAllocator(GRESSLIB_ALLOC const alloc, GRESSLIB_DEALLOC const de
 }
 
 
-GRESSLIB_Window * GRESSLIB_CreateWindow(window_descriptor* const window_desc)
+GRESSLIB_Window * GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_desc)
 {
     //open a connection to the display
     Display* display = XOpenDisplay(0);
@@ -98,9 +94,9 @@ GRESSLIB_Window * GRESSLIB_CreateWindow(window_descriptor* const window_desc)
     XFree(size);
 
     //allocate a new window struct
-   GRESSLIB_Window *wnd = allocate_window(window_desc);
+    GRESSLIB_Window *wnd = GRESSLIB_AllocateWindow(window_desc);
 
-    wnd->native_handle = NULL;
+    wnd->nativeHandle = NULL;
 
     //manually allocate a native handle struct and set some members
     x11_native_handle* native_handle = GRESSLIB_Allocate(sizeof(x11_native_handle));
@@ -151,7 +147,7 @@ GRESSLIB_Window * GRESSLIB_CreateWindow(window_descriptor* const window_desc)
     XFreePixmap(native_handle->display, hidden_cursor_pixmap);
 
     //adding the native handle pointer
-    wnd->native_handle = (void*)native_handle;
+    wnd->nativeHandle = (void*)native_handle;
 
     //set which os events we want to receive
     XSelectInput(display, w, ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask);
@@ -176,13 +172,13 @@ GRESSLIB_Window * GRESSLIB_CreateWindow(window_descriptor* const window_desc)
     return wnd;
 }
 
-bool destroy_window(GRESSLIB_Window * window)
+enum GRESSLIB_DestroyWindowResult GRESSLIB_DestroyWindow(GRESSLIB_Window * window)
 {
-    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+    x11_native_handle* native = (x11_native_handle*)window->nativeHandle;
 
     //destroy the gl context as required
     if (native->gl_context)
-        shutdown_gl(window);
+        GRESSLIB_ShutdownGL(window);
     
     //free both cursor resources
     XFreeCursor(native->display, native->normal);
@@ -192,143 +188,101 @@ bool destroy_window(GRESSLIB_Window * window)
     XCloseDisplay(native->display);
     GRESSLIB_Deallocate(native);
 
-    window->native_handle = NULL;
+    window->nativeHandle = NULL;
 
-    return true;
+    return GRESSLIB_DESTROYWINDOW_Success;
 }
 
-bool process_os_events(GRESSLIB_Window * const window)
+enum GRESSLIB_ProcessOSEventsResult GRESSLIB_ProcessOSEvents(GRESSLIB_Window * const window)
 {
-    x11_native_handle* native_handle = (x11_native_handle*)window->native_handle;
+    x11_native_handle* native_handle = (x11_native_handle*)window->nativeHandle;
 
     //define events
     XEvent e;
-    input_event ev;
+    GRESSLIB_InputEvent ev;
 
-    //while there are events pending
     while (XPending(native_handle->display))
     {
-        ev.event_type = EVENT_NONE;
+        ev.eventType = EVENT_NONE;
         XNextEvent(native_handle->display, &e);
         switch (e.type)
         {
             default:
-                return true;
+                break;
             case ClientMessage:
             {
-            //if the (x) button is clicked
-            if (e.xclient.data.l[0] == native_handle->delete_window)
-                return false;
+             	//if the (x) button is clicked
+             	if (e.xclient.data.l[0] == native_handle->delete_window)
+		{
+                    return GRESSLIB_PROCESSOSEVENTS_QuitEvent;
+		}
+		break;
             }
             case KeyPress:
+	    case KeyRelease:
             {
-                //KeySym sym = XkbKeycodeToKeysym(native_handle->display, e.xkey.keycode, 0, 0);
-                //printf("%c\n", keysym2ucs(sym));
-                ev.event_type = KEY_PRESS;
-                ev.keycode = x_key_to_gresslib_key(XkbKeycodeToKeysym(native_handle->display, e.xkey.keycode, 0, 0));
-                break;
-            }
-            case KeyRelease:
-            {
-                ev.event_type = KEY_RELEASE;
+                ev.eventType = e.type == KeyPress ? KEY_PRESS : KEY_RELEASE;
                 ev.keycode = x_key_to_gresslib_key(XkbKeycodeToKeysym(native_handle->display, e.xkey.keycode, 0, 0));
                 break;
             }
             case ButtonPress:
+	    case ButtonRelease:
             {
-                ev.event_type = MOUSEBUTTON_PRESS;
+                ev.eventType = e.type == ButtonPress ? MOUSEBUTTON_PRESS : MOUSEBUTTON_RELEASE;
                 switch (e.xbutton.button)
                 {
                     default:
-                        ev.mouse_button = -1;
+                        ev.mouseButton = -1;
                         break;
                     case 1:
-                        ev.mouse_button = 1;
-                        break;
-                    case 2:
-                        ev.mouse_button = 2;
-                        break;
-                    case 3:
-                        ev.mouse_button = 3;
-                        break;
-                    case 4:
-                        ev.mouse_button = 4;
-                        break;
-                    case 5:
-                        ev.mouse_button = 5;
-                        break;
-                }
-                break;
-            }
-            case ButtonRelease:
-            {
-                ev.event_type = MOUSEBUTTON_RELEASE;
-                switch (e.xbutton.button)
-                {
-                    default:
-                        ev.mouse_button = -1;
-                        break;
-                    case 1:
-                        ev.mouse_button = 1;
-                        break;
-                    case 2:
-                        ev.mouse_button = 2;
-                        break;
-                    case 3:
-                        ev.mouse_button = 3;
-                        break;
-                    case 4:
-                        ev.mouse_button = 4;
-                        break;
-                    case 5:
-                        ev.mouse_button = 5;
+		    case 2:
+		    case 3:
+		    case 4:
+		    case 5:
+                        ev.mouseButton = e.xbutton.button;
                         break;
                 }
                 break;
             }
             case MotionNotify:
             {
-                ev.event_type = MOUSE_MOVE;
-                ev.mouse_x = e.xmotion.x;
-                ev.mouse_y = e.xmotion.y;
+                ev.eventType = MOUSE_MOVE;
+                ev.mouseX = e.xmotion.x;
+                ev.mouseY = e.xmotion.y;
                 break;
             }
         }
-        run_input_event_callback(window, &ev);
+        GRESSLIB_RunInputEventCallback(window, &ev);
     }
-	return true;
+    return GRESSLIB_PROCESSOSEVENTS_NoQuitEvent;
 }
 
-void show_cursor(GRESSLIB_Window * const window)
+void GRESSLIB_ShowCursor(GRESSLIB_Window * const window)
 {
-    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+    x11_native_handle* native = (x11_native_handle*)window->nativeHandle;
 
     //define the default cursor as the current one
     XDefineCursor(native->display, native->window, native->normal);
-
     XFlush(native->display); 
 }
 
-void hide_cursor(GRESSLIB_Window * const window)
+void GRESSLIB_HideCursor(GRESSLIB_Window * const window)
 {
-    x11_native_handle* native = (x11_native_handle*)window->native_handle;
+    x11_native_handle* native = (x11_native_handle*)window->nativeHandle;
 
     //define the transparent cursor as the current one
     XDefineCursor(native->display, native->window, native->hidden);
-
     XFlush(native->display);
 }
 
-void warp_cursor(GRESSLIB_Window * const window, const int x, const int y)
+void GRESSLIB_WarpCursor(GRESSLIB_Window * const window, const int x, const int y)
 {
-    x11_native_handle* native = (x11_native_handle*)window->native_handle;
-
+    x11_native_handle* native = (x11_native_handle*)window->nativeHandle;
     XWarpPointer(native->display, None, native->window, 0, 0, 0, 0, x, y);
-
     XFlush(native->display);
 }
 
-enum keyboard_keycodes x_key_to_gresslib_key(KeySym keysym)
+enum GRESSLIB_KeyboardKeycode x_key_to_gresslib_key(KeySym keysym)
 {
     //evil switch-case statement of death
     switch (keysym)

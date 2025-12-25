@@ -1,8 +1,8 @@
 #ifndef GLX_GLBOOTSTRAP_H
 #define GLX_GLBOOTSTRAP_H
 
-struct window;
+struct GRESSLIB_Window;
 
-void shutdown_gl(window* window);
+void shutdown_gl(GRESSLIB_Window* window);
 
 #endif
