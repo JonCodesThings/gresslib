@@ -118,16 +118,19 @@ GRESSLIB_Window * GRESSLIB_CreateWindow(GRESSLIB_WindowDescriptor* const window_
     window_hints.decorations = 0;
     window_hints.functions = 0;
 
-    if (window_desc->style == WINDOW_BORDERED)
+    if (native_handle->window_hints != None)
     {
-//        window_hints.decorations = _motif_wm_hints_decoration_border | _motif_wm_hints_decoration_title  | _motif_wm_hints_decoration_minimize | _motif_wm_hints_decoration_menu;
-        window_hints.decorations |= _motif_wm_hints_decoration_border | _motif_wm_hints_decoration_title | _motif_wm_hints_decoration_menu;
-        window_hints.functions |=  _motif_wm_hints_function_close | _motif_wm_hints_decoration_resize;
+	if (window_desc->style & WINDOW_BORDERED)
+    	{
+        	//window_hints.decorations = _motif_wm_hints_decoration_border | _motif_wm_hints_decoration_title  | _motif_wm_hints_decoration_minimize | _motif_wm_hints_decoration_menu;
+        	window_hints.decorations |= _motif_wm_hints_decoration_border | _motif_wm_hints_decoration_title | _motif_wm_hints_decoration_menu;
+        	window_hints.functions |=  _motif_wm_hints_function_close | _motif_wm_hints_decoration_resize;
+
+		//change the property based on the hints
+    		XChangeProperty(display, w, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);    
+	}
     }
-
-    //change the property based on the hints
-    XChangeProperty(display, w, native_handle->window_hints, native_handle->window_hints, 32, PropModeReplace, (unsigned char*)&window_hints, 5);
-
+       
     //set the default cursor
     native_handle->normal = XCreateFontCursor(display, XC_left_ptr);
 

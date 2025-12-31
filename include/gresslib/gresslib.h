@@ -1,6 +1,8 @@
 #ifndef GRESSLIB_H
 #define GRESSLIB_H
 
+#include <stddef.h>
+
 //Function pointer typedefs for memory functions
 typedef void* (*GRESSLIB_ALLOC)(size_t);
 typedef void (*GRESSLIB_DEALLOC)(void*);
@@ -196,6 +198,8 @@ enum GRESSLIB_BootstrapGLResult GRESSLIB_BootstrapGL(GRESSLIB_Window * const win
 
 // Function that swaps the backbuffer of the current active OpenGL context.
 void GRESSLIB_SwapGLBuffers(GRESSLIB_Window * const window);
+
+void GRESSLIB_ShutdownGL(GRESSLIB_Window * window);
 
 // Function that sets the callback for the relevant input event type.
 void GRESSLIB_SetInputEventCallback(GRESSLIB_Window * const window, const enum GRESSLIB_InputEventType event, GRESSLIB_InputEventCallback callback);
