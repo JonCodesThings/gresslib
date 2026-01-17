@@ -1,4 +1,4 @@
-Copyright (c) 2019 Jonathan Duncanson
+Copyright (c) 2025 Jonathan Duncanson
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
