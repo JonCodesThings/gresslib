@@ -1,8 +1,10 @@
 #include <include/gresslib/gresslib.h>
 
+#include <src/internal/gresslib_internal.h>
 #include <src/x11/x11_internal.h>
 
 #include <GL/glx.h>
+
 
 enum GRESSLIB_BootstrapGLResult GRESSLIB_BootstrapGL(GRESSLIB_Window* window, GRESSLIB_GLContextDescriptor* const context_desc)
 {
@@ -29,7 +31,10 @@ enum GRESSLIB_BootstrapGLResult GRESSLIB_BootstrapGL(GRESSLIB_Window* window, GR
     XVisualInfo* vis = glXChooseVisual(native->display, DefaultScreen(native->display), context_attribs);
 
     if (!vis)
+    {
+        gresslib_debug("BootstrapGL failed! glxChooseVisual returned NULL!");
         return GRESSLIB_BOOTSTRAPGL_FAILED;
+    }
 
     //create a colormap for the window
     Colormap col = XCreateColormap(native->display, native->window, (Visual*)vis, AllocNone);
@@ -41,13 +46,17 @@ enum GRESSLIB_BootstrapGLResult GRESSLIB_BootstrapGL(GRESSLIB_Window* window, GR
     GLXContext context = glXCreateContext(native->display, vis, NULL, GL_TRUE);
 
     if (!context)
+    {
+        gresslib_debug("BootstrapGL failed! glxCreateContext returned invalid GL context!");
         return GRESSLIB_BOOTSTRAPGL_FAILED;
+    }
 
     //make the context current
     glXMakeCurrent(native->display, native->window, context);
 
     native->gl_context = context;
 
+    gresslib_debug("BootstrapGL success! GL context successfully created!");
     return GRESSLIB_BOOTSTRAPGL_SUCCESS;
 }
 
@@ -63,4 +72,5 @@ void GRESSLIB_ShutdownGL(GRESSLIB_Window* window)
     x11_native_handle* native = (x11_native_handle*)window->nativeHandle;
 
     glXDestroyContext(native->display, native->gl_context);
+    gresslib_debug("ShutdownGL success! GL context successfully destroyed!");
 }

@@ -1,14 +1,15 @@
 #include <src/internal/gresslib_internal.h>
 
-#include <stdlib.h>
-
 GRESSLIB_Window* GRESSLIB_AllocateWindow(GRESSLIB_WindowDescriptor* const window_descriptor)
 {
 	//allocate the window struct
     void* window_alloc = GRESSLIB_Allocate(sizeof(GRESSLIB_Window));
 
+	gresslib_assert(window_alloc != NULL, "GRESSLIB_AllocateWindow failed!");
 	if (window_alloc == NULL)
+	{
 		return NULL;
+	}
 
 	GRESSLIB_Window* wnd = (GRESSLIB_Window*)window_alloc;
     wnd->descriptor = *window_descriptor;
@@ -22,7 +23,6 @@ GRESSLIB_Window* GRESSLIB_AllocateWindow(GRESSLIB_WindowDescriptor* const window
 void GRESSLIB_SetInputEventCallback(GRESSLIB_Window * const window, const enum GRESSLIB_InputEventType event, GRESSLIB_InputEventCallback callback)
 {
 	//set the event callback
-
 	if (event & KEY_PRESS)
 		window->onKeyPress = callback;
 
