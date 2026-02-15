@@ -56,6 +56,8 @@ enum GRESSLIB_BootstrapGLResult GRESSLIB_BootstrapGL(GRESSLIB_Window* window, GR
 
     native->gl_context = context;
 
+    XFree(vis);
+
     gresslib_debug("BootstrapGL success! GL context successfully created!");
     return GRESSLIB_BOOTSTRAPGL_SUCCESS;
 }
